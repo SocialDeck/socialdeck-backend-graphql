@@ -18,6 +18,8 @@ gem 'bcrypt', '~> 3.1.7'
 gem 'jwt'
 gem 'faker'
 
+gem 'telephone_number'
+gem "valid_email2"
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
 

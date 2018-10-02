@@ -7,6 +7,15 @@
 #   Character.create(name: 'Luke', movie: movies.first)
 require 'faker'
 
+def valid_number
+  number = Faker::PhoneNumber.cell_phone
+  while TelephoneNumber.invalid?(number, :us)
+    number = Faker::PhoneNumber.cell_phone
+  end
+  number
+end
+
+
 10.times do
   Address.create!(
     address1: Faker::Address.street_address,
@@ -18,11 +27,11 @@ require 'faker'
 end
 
 10.times do
-  User.create!(
+  User.create(
     username: Faker::Internet.username, 
     password: "user",
     email: Faker::Internet.email,
-    number: Faker::PhoneNumber.cell_phone
+    number: valid_number
   )
 end
 
@@ -53,7 +62,7 @@ end
     display_name: Faker::Military.air_force_rank,
     person_name: Faker::Name.name,
     business_name: rand < 0.3 ? Faker::Bank.name : nil,
-    number: Faker::PhoneNumber.cell_phone,
+    number: valid_number,
     email: Faker::Internet.email,
     address_id: Address.pluck(:id).sample,
     author_id: user.id,
