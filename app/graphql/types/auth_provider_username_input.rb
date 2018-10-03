@@ -1,6 +1,6 @@
-Types::AuthProviderUsernameInput = GraphQL::InputObjectType.define do
-  name 'AUTH_PROVIDER_USERNAME'
-
-  argument :username, !types.String
-  argument :password, !types.String
+module Types
+  class AuthProviderUsernameInput < Types::BaseInputObject
+    argument :username, String, "Username for user", required: true
+    argument :password, String, "User's password", required: true
+  end
 end

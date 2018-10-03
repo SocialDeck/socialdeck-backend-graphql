@@ -7,6 +7,15 @@
 #   Character.create(name: 'Luke', movie: movies.first)
 require 'faker'
 
+def valid_number
+  number = Faker::PhoneNumber.cell_phone
+  while TelephoneNumber.invalid?(number, :us)
+    number = Faker::PhoneNumber.cell_phone
+  end
+  number
+end
+
+
 10.times do
   Address.create!(
     address1: Faker::Address.street_address,
@@ -18,21 +27,22 @@ require 'faker'
 end
 
 10.times do
-  User.create!(
+  User.create(
     username: Faker::Internet.username, 
     password: "user",
     email: Faker::Internet.email,
-    number: Faker::PhoneNumber.cell_phone
+    number: valid_number
   )
 end
 
 10.times do
   user = User.find(User.pluck(:id).sample)
+  type = ['Personal', 'Work', 'Family', 'Fake'].sample
   Card.create!(
-    name: Faker::Name.name,
-    display_name: Faker::Military.air_force_rank,
+    name: type,
+    display_name: type == 'Fake' ? 'Personal' : type,
     person_name: Faker::Name.name,
-    business_name: rand < 0.3 ? Faker::Bank.name : nil,
+    business_name: type == 'Work' ? Faker::Bank.name : nil,
     number: user.number,
     email: user.email,
     user_id: user.id,
@@ -48,12 +58,13 @@ end
 
 10.times do
   user = User.find(User.pluck(:id).sample)
+  type = ['Personal', 'Work'].sample
   Card.create!(
-    name: Faker::Name.name,
-    display_name: Faker::Military.air_force_rank,
+    name: type,
+    display_name: type,
     person_name: Faker::Name.name,
-    business_name: rand < 0.3 ? Faker::Bank.name : nil,
-    number: Faker::PhoneNumber.cell_phone,
+    business_name: type == 'Work' ? Faker::Bank.name : nil,
+    number: valid_number,
     email: Faker::Internet.email,
     address_id: Address.pluck(:id).sample,
     author_id: user.id,
@@ -72,5 +83,16 @@ end
     user_id:user.id,
     contact_id: card.user_id,
     card_id: card.id
+  )
+end
+
+10.times do
+  connection = Connection.find(Connection.pluck(:id).sample)
+  Log.create!(
+    user_id:connection.user_id,
+    contact_id: connection.contact_id,
+    card_id: connection.card_id,
+    date: Time.now + [1.day, 2.day, 3.day].sample,
+    text: Faker::GameOfThrones.house
   )
 end

@@ -1,0 +1,10 @@
+module Types
+  class LogType < Types::BaseObject
+    field :id, ID, null: false
+    field :user, Types::UserType, null: false
+    field :contact, Types::UserType, null: false
+    field :card, Types::CardType, null: true
+    field :date, String, null: false
+    field :text, String, null: false
+  end
+end
