@@ -37,11 +37,12 @@ end
 
 10.times do
   user = User.find(User.pluck(:id).sample)
+  type = ['Personal', 'Work', 'Family', 'Fake'].sample
   Card.create!(
-    name: Faker::Name.name,
-    display_name: Faker::Military.air_force_rank,
+    name: type,
+    display_name: type == 'Fake' ? 'Personal' : type,
     person_name: Faker::Name.name,
-    business_name: rand < 0.3 ? Faker::Bank.name : nil,
+    business_name: type == 'Work' ? Faker::Bank.name : nil,
     number: user.number,
     email: user.email,
     user_id: user.id,
@@ -57,11 +58,12 @@ end
 
 10.times do
   user = User.find(User.pluck(:id).sample)
+  type = ['Personal', 'Work'].sample
   Card.create!(
-    name: Faker::Name.name,
-    display_name: Faker::Military.air_force_rank,
+    name: type,
+    display_name: type,
     person_name: Faker::Name.name,
-    business_name: rand < 0.3 ? Faker::Bank.name : nil,
+    business_name: type == 'Work' ? Faker::Bank.name : nil,
     number: valid_number,
     email: Faker::Internet.email,
     address_id: Address.pluck(:id).sample,
@@ -81,5 +83,16 @@ end
     user_id:user.id,
     contact_id: card.user_id,
     card_id: card.id
+  )
+end
+
+10.times do
+  connection = Connection.find(Connection.pluck(:id).sample)
+  Log.create!(
+    user_id:connection.user_id,
+    contact_id: connection.contact_id,
+    card_id: connection.card_id,
+    date: Time.now + [1.day, 2.day, 3.day].sample,
+    text: Faker::GameOfThrones.house
   )
 end
