@@ -27,14 +27,13 @@ gem "valid_email2"
 # gem 'capistrano-rails', group: :development
 
 # Reduces boot times through caching; required in config/boot.rb
-gem 'bootsnap', '>= 1.1.0', require: false
+# gem 'bootsnap', '>= 1.1.0', require: false
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 gem 'rack-cors', require: 'rack/cors'
 
 # gem to facilate GraphQL
-gem 'graphql'
-gem 'graphql-query-resolver'
+gem "graphql"
 gem 'search_object'
 gem 'search_object_graphql'
 

@@ -1,20 +1,24 @@
-Types::CardType = GraphQL::ObjectType.define do
-  name 'Card'
+module Types
+  class CardType < Types::BaseObject
+    field :id, ID, null: false
+    field :user, Types::UserType, null: true
+    field :author, Types::UserType, null: false
+    field :name, String, null: false
+    field :display_name, String, null: false
+    field :person_name, String, null: false
+    field :business_name, String, null: true
+    field :address, Types::AddressType, null: true
+    field :number, String, null: true
+    field :email, String, null: true
+    field :birth_date, Types::DateTimeType, null: true
+    field :twitter, String, null: true
+    field :linked_in, String, null: true
+    field :facebook, String, null: true
+    field :instagram, String, null: true
+    field :verified, Boolean, null: false
 
-  field :id, !types.ID
-  field :user, -> { Types::UserType }, property: :user
-  field :author_id, -> { Types::UserType }, property: :user
-  field :name, types.String
-  field :display_name, types.String
-  field :person_name, types.String
-  field :business_name, types.String
-  field :address_id, -> { Types::AddressType }, property: :address
-  field :number, types.String
-  field :email, types.String
-  field :birth_date, Types::DateTimeType
-  field :twitter, types.String
-  field :linked_in, types.String
-  field :facebook, types.String
-  field :instagram, types.String
-
+    def verified
+      !!object.user_id
+    end
+  end
 end

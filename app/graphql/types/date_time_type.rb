@@ -1,13 +1,13 @@
-DateTimeType = GraphQL::ScalarType.define do
-  name 'DateTime'
+module Types
+  class DateTimeType < Types::BaseScalar
+    def self.coerce_input(value, context)
+      Date.parse(value) 
+    end
 
-  coerce_input ->(value, _ctx) { Time.zone.parse(value) }
-  coerce_result ->(value, _ctx) { value.utc.iso8601 }
-end
-
-MyType = ::GraphQL::ObjectType.define do
-  name 'MyType'
-  field :when, type: !DateTimeType
+    def self.coerce_result(value, context)
+      value.to_date
+    end
+  end 
 end
 
 #https://stackoverflow.com/questions/47960194/graphql-ruby-date-or-datetime-type
