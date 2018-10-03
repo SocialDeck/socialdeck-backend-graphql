@@ -13,10 +13,13 @@ module Types
 
 
     def login(user:)
-      OpenStruct.new({
-        token: context[:current_user].token,
-        user: context[:current_user]
-      })
+      credential_user = User.find_by_username(user[:username])
+      if credential_user && credential_user.authenticate(user[:password])
+        OpenStruct.new({
+          token: credential_user.token,
+          user: credential_user
+        })
+      end
     end
 
     def create_user(user:, email:, number:nil)
