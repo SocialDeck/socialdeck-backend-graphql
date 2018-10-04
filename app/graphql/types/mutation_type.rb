@@ -217,23 +217,26 @@ module Types
       end
     end
 
-    # field :updateConnection, Types::LinkType, null: true do
-    #   argument :token, String, required: true
-    #   argument :card_id, ID, required: true
-    # end
+    field :updateConnection, Types::LinkType, null: true do
+      argument :token, String, required: true
+      argument :id, ID, required: true
+      argument :card_id, ID, required: true
+    end
 
-    # def update_connection(token:, card_id:)
-    #   current_user = User.find_by(token: token)
-    #   card = Card.find(card_id)
-    #   print card.user_id
-    #   if card.update
-    #       Connection.update!(
-    #         user_id: current_user.id,
-    #         contact_id: card.user_id,
-    #         card_id: card.id
-    #       )
-    #   end
-    # end
+    def update_connection(token:, id:, card_id:)
+      current_user = User.find_by(token: token)
+      return unless current_user
+
+      connection = Connection.find_by(id:id, contact_id:current_user.id)
+      return unless connection
+
+      card = Card.find_by(id:card_id, user_id:current_user.id)
+      return unless card
+
+      if connection.update(card_id: card.id)
+          connection
+      end
+    end
 
     # #LOG CREATE & UPDATE
 
