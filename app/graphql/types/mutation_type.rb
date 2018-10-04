@@ -32,10 +32,25 @@ module Types
     end
   #UPDATE FEATURES
     field :updateUser, Types::UserType, null: false do
-      argument :user, Types::AuthProviderUsernameInput, required: true
-      argument :email, String, required: true
-     argument :number, String, required: false
+      argument :token, String, required: true
+      argument :username, String, required: false
+      argument :password, String, required: false
+      argument :email, String, required: false
+      argument :number, String, required: false
    end
+
+    def update_user(token:, username:nil, password:nil, email:nil, number:nil)
+      current_user = User.find_by(token: token)
+      user_params = {email: email || current_user.email,
+                     number: number || current_user.number,
+                     username: username || current_user.username}
+      if password
+        user_params[:password] = password
+      end
+      if current_user.update(user_params)
+        current_user
+      end
+    end
 
     field :updateCard, Types::CardType, null: true do
       argument :token, String, required: true
