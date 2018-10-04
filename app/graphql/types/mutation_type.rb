@@ -13,7 +13,7 @@ module Types
 
     field :createCard, Types::CardType, null: true do
       argument :token, String, required: true
-      argument :owner, Boolean, required: true
+      argument :owned, Boolean, required: true
       argument :card_name, String, required: true
       argument :display_name, String, required: false
       argument :name, String, required: true
@@ -89,7 +89,7 @@ module Types
     end
 
 
-    def create_card(token:, owner:true, card_name:, display_name:nil, name:, 
+    def create_card(token:, owned:true, card_name:, display_name:nil, name:, 
                     business_name:nil, number:nil, email:nil, address:nil, birth_date:nil,
                     twitter:nil, facebook:nil, linked_in:nil, instagram:nil)
       current_user = User.find_by(token: token)
@@ -118,7 +118,7 @@ module Types
           email: email,
           address_id: address_id,
           author_id: current_user.id,
-          user_id: owner ? current_user.id : nil,
+          user_id: owned ? current_user.id : nil,
           birth_date: birth_date,
           twitter: twitter,
           linked_in: linked_in,

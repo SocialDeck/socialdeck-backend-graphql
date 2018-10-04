@@ -12,7 +12,7 @@ module Types
       argument :token, String, required: true
     end
 
-    field :card, Types::CardType, null: false do
+    field :card, Types::CardType, null: true do
       argument :id, ID, required: true
       argument :token, String, required: true
     end
@@ -25,7 +25,7 @@ module Types
       argument :token, String, required: true
     end
 
-    field :blocked_User, [Types::UserType], null: true do
+    field :blocked_Users, [Types::UserType], null: true do
       argument :token, String, required: true
     end
 
@@ -38,7 +38,9 @@ module Types
     def card(id:, token:)
       current_user = User.find_by(token: token)
       connection = Connection.find_by(user_id: current_user.id, card_id: id)
-      if connection
+      owned_card = Card.find_by(user_id: current_user.id, id: id)
+      authored_card = Card.find_by(author_id: current_user.id, id: id)
+      if connection || owned_card || authored_card
         Card.find(id)
       end
     end    
@@ -62,7 +64,7 @@ module Types
       Card.where(id: Connection.where(user_id: current_user.id).pluck(:card_id)).where.not(id: -1)
     end
 
-    def blocked_user(token:)
+    def blocked_users(token:)
       current_user = User.find_by(token: token)
       User.where(id: Connection.where(card_id: -1, user_id: current_user.id).pluck(:contact_id))
     end
