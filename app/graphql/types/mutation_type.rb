@@ -30,5 +30,47 @@ module Types
           password: user[:password]
         )
     end
+  #UPDATE FEATURES
+    field :updateUser, Types::UserType, null: false do
+      argument :user, Types::AuthProviderUsernameInput, required: true
+      argument :email, String, required: true
+     argument :number, String, required: false
+   end
+
+    field :updateCard, Types::CardType, null: true do
+      argument :token, String, required: true
+      argument :owner, Boolean, required: true
+      argument :card_name, String, required: true
+      argument :display_name, String, required: false
+      argument :name, String, required: true
+      argument :business_name, String, required: false
+      argument :address, Types::AddressInput, required: false
+      argument :number, String, required: false
+      argument :email, String, required: false
+      argument :birth_date, Types::DateTimeType, required: false
+      argument :twitter, String, required: false
+      argument :linked_in, String, required: false
+      argument :facebook, String, required: false
+      argument :instagram, String, required: false
+    end
+
+     field :updateConnection, Types::LinkType, null: true do
+      argument :token, String, required: true
+      argument :card_id, ID, required: true
+    end
+
+    def update_connection(token:, card_id:)
+      current_user = User.find_by(token: token)
+      card = Card.find(card_id)
+      print card.user_id
+      if card.update
+          Connection.update!(
+            user_id: current_user.id,
+            contact_id: card.user_id,
+            card_id: card.id
+          )
+      end
+    end
+
   end
 end
