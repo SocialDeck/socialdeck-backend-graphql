@@ -279,7 +279,10 @@ mutation {
 Create a new card
 ```graphql
 mutation {
-  createCard(token:String!, owned:Boolean!, cardName:String!, displayName:String, name:String!, number:String, email:String, address: {address1:String!, address2:String, city: String!, state:String!, postalCode:String!}, twitter:String, facebook:String, linkedIn:String, instagram:String) {
+  createCard(token:String!, owned:Boolean!, cardName:String!, displayName:String, name:String!, 
+             number:String, email:String, address: {address1:String!, address2:String, city: String!, 
+             state:String!, postalCode:String!}, twitter:String, facebook:String, linkedIn:String, 
+             instagram:String) {
     id
     user {
       id
