@@ -6,7 +6,7 @@ List of block users:
 
 ```graphql
 {
-  blockedUsers(token: "qAnCqd1dBZDEBrZcb2fH7a3n") {
+  blockedUsers(token:String!) {
     id
     username
     email
@@ -18,7 +18,7 @@ List of all contacts:
 
 ```graphql
 {
-  contacts(token: "qAnCqd1dBZDEBrZcb2fH7a3n") {
+  contacts(token:String!) {
     id
     user {
       id
@@ -73,7 +73,7 @@ List of all logs associated with a card
 
 ```graphql
 {
-  logs(token: "qAnCqd1dBZDEBrZcb2fH7a3n", cardId: 42) {
+  logs(token:String!, cardId:ID!) {
     id
     user {
       id
@@ -131,7 +131,7 @@ Get a specific card that is owned, authored, or connected
 
 ```graphql
 {
-  card(token: "qAnCqd1dBZDEBrZcb2fH7a3n", id: 42) {
+  card(token:String!, id:ID!) {
     id
     user {
       id
@@ -170,7 +170,7 @@ Get a specific card that is owned, authored, or connected
 List of all orphan cards authored 
 ```graphql
 {
-  authoredCards(token: "qAnCqd1dBZDEBrZcb2fH7a3n") {
+  authoredCards(token:String!) {
     id
     user {
       id
@@ -209,7 +209,7 @@ List of all orphan cards authored
 List of one's own cards
 ```graphql
 {
-  ownedCards(token: "qAnCqd1dBZDEBrZcb2fH7a3n") {
+  ownedCards(token:String!) {
     id
     user {
       id
@@ -252,7 +252,7 @@ List of one's own cards
 Log in
 ```graphql
 mutation {
-  login(user: {username: "douglas.adams", password: "42"}) {
+  login(user: {username:String!, password:String!}!) {
     user {
       id
       username
@@ -263,12 +263,12 @@ mutation {
   }
 }
 ```
-Create an new user
+Create an new user. Will validate email and number.
 
 ```graphql
 mutation {
-  createUser(user: {username: "douglas.adams", password: "42"}, 
-             email: "arthur@dent.com", number:"5555555555") {
+  createUser(user: {username:String!, password:String!}!, 
+             email:String!, number:String!) {
     id
     username
     email
@@ -276,7 +276,7 @@ mutation {
   }
 }
 ```
-Create a new card
+Create a new card. If an orphaned card, will automatically create a connection as well. Will validate email and number.
 ```graphql
 mutation {
   createCard(token:String!, owned:Boolean!, cardName:String!, displayName:String, name:String!, 
@@ -322,8 +322,8 @@ mutation {
 Create a connection
 ```graphql
 mutation {
-  createConnection(token: "ab58KfZnAN7HfizVAJUHgGsH",  cardId:45) {
-id
+  createConnection(token:String!,  cardId:ID!) {
+    id
     user {
       id
       username
@@ -376,8 +376,8 @@ id
 Block User
 ```graphql
 mutation {
-  createConnection(token: "ab58KfZnAN7HfizVAJUHgGsH",  userId:45) {
-id
+  blockUser(token:String!,  userId:ID!) {
+    id
     user {
       id
       username
