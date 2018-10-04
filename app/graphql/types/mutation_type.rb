@@ -72,5 +72,49 @@ module Types
       end
     end
 
+    #LOG CREATE & UPDATE
+
+    field :createLog, Types::LogType, null: false do
+      argument :user, Types::UserType, required: true
+      argument :contact, Types::UserType, required: false
+      argument :card, Types::CardType, required: true
+      argument :date, String, required: false
+      argument :text, String, required: false
+    end
+
+    field :updateLog, Types::LogType, null: false do
+      argument :user, Types::UserType, required: true
+      argument :contact, Types::UserType, required: false
+      argument :card, Types::CardType, required: true
+      argument :date, String, required: false
+      argument :text, String, required: false
+    end
+
+    def create_log(token:, card_id:)
+      current_user = User.find_by(token: token)
+      log = Log.find(log_id)
+      print log.user_id
+      if log
+          Log.create!(
+            user_id: current_user.id,
+            contact_id: card.user_id,
+            card_id: card.id
+          )
+      end
+    end
+
+    def update_log(token:, card_id:)
+      current_user = User.find_by(token: token)
+      log = Log.find(log_id)
+      print log.user_id
+      if log.update
+          Log.update!(
+            user_id: current_user.id,
+            contact_id: card.user_id,
+            card_id: card.id
+          )
+      end
+    end
+
   end
 end
