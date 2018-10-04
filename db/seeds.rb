@@ -44,7 +44,7 @@ end
   User.create(
     username: Faker::Internet.username, 
     password: "user",
-    email: Faker::Internet.email,
+    email: Faker::Internet.free_email,
     number: valid_number
   )
 end
@@ -80,7 +80,7 @@ end
     name: type,
     display_name: type,
     person_name: Faker::Name.name,
-    business_name: type == 'Work' ? Faker::Bank.name : nil,
+    business_name: type == 'Work' ? Faker::Company.name : nil,
     number: valid_number,
     email: Faker::Internet.email,
     address_id: Address.pluck(:id).sample,
