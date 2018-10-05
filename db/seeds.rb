@@ -62,7 +62,7 @@ CSV.foreach('db/MOCK_DATA.csv', headers: true) do |row|
     }
 
     address = Address.create!(address_params)
-    address_id = address_id
+    address_id = address.id
   else
     address_id = nil
   end
