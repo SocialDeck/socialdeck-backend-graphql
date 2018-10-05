@@ -32,7 +32,6 @@ Card.create!(
   author_id: -1,
 )
 
-
 CSV.foreach('db/MOCK_DATA.csv', headers: true) do |row|
   row_hash = row.to_h
   puts row_hash
