@@ -1,20 +1,7 @@
 #  SocialDeck GraphQL API Schema
 
 ## Queries
-
-List of block users:
-
-```graphql
-{
-  blockedUsers(token:String!) {
-    id
-    username
-    email
-    number
-  }
-}
-```
-List of all contacts:
+**List of all contacts**
 
 ```graphql
 {
@@ -56,7 +43,7 @@ List of all contacts:
 ```
 
 
-List of all users
+**List of all users**
 
 ```graphql
 {
@@ -69,7 +56,7 @@ List of all users
 }
 ```
 
-List of all logs associated with a card
+**List of all logs associated with a card**
 
 ```graphql
 {
@@ -127,7 +114,7 @@ List of all logs associated with a card
 }
 ```
 
-Get a specific card that is owned, authored, or connected
+**Get a specific card that is owned, authored, or connected**
 
 ```graphql
 {
@@ -167,7 +154,7 @@ Get a specific card that is owned, authored, or connected
   }
 }
 ```
-List of all orphan cards authored 
+**List of all orphan cards authored** 
 ```graphql
 {
   authoredCards(token:String!) {
@@ -206,7 +193,7 @@ List of all orphan cards authored
   }
 }
 ```
-List of one's own cards
+**List of one's own cards**
 ```graphql
 {
   ownedCards(token:String!) {
@@ -245,11 +232,25 @@ List of one's own cards
   }
 }
 ```
+**List of blocked users**
+
+```graphql
+{
+  blockedUsers(token:String!) {
+    id
+    username
+    email
+    number
+  }
+}
+```
+
+---
 
 ## Mutations
 
+**Login**
 
-Log in
 ```graphql
 mutation {
   login(user: {username:String!, password:String!}!) {
@@ -264,7 +265,8 @@ mutation {
 }
 ```
 
-Create an new user. Will validate email and number.
+**Create New User** 
+*Note: Will validate email and number.*
 
 ```graphql
 mutation {
@@ -278,7 +280,9 @@ mutation {
 }
 ```
 
-Create a new card. If an orphaned card, will automatically create a connection as well. Will validate email and number.
+**Create New Card**
+
+*Note: If an orphaned card, will automatically create a connection as well. Will validate email and number.*
 ```graphql
 mutation {
   createCard(token:String!, owned:Boolean!, cardName:String!, displayName:String, name:String!, 
@@ -322,7 +326,7 @@ mutation {
 
 ```
 
-Create a connection
+**Create Connection**
 ```graphql
 mutation {
   createConnection(token:String!,  cardId:ID!) {
@@ -377,7 +381,7 @@ mutation {
 }
 ```
 
-Block User
+**Block User**
 ```graphql
 mutation {
   blockUser(token:String!,  userId:ID!) {
@@ -401,7 +405,7 @@ mutation {
 }
 ```
 
-Update User
+**Update User**
 ```
 mutation {
   updateUser(token: String!, username: String!){
@@ -410,7 +414,7 @@ mutation {
 }
 ```
 
-Update Card
+**Update Card**
 ```
 mutation {
   updateCard(token:String!, id: 3, cardName: String!, displayName:String!, name:String!, 
@@ -452,7 +456,7 @@ mutation {
 }
 ```
 
-Update Connection
+**Update Connection**
 ```
 mutation {
   updateConnection(token:String!, id:ID!, cardId:ID!) {
@@ -507,7 +511,7 @@ mutation {
 }
 ```
 
-Destroy User
+**Delete User**
 ```
 mutation {
   destroyUser(token:String!){
@@ -516,7 +520,7 @@ mutation {
 }
 ```
 
-Destroy Card
+**Delete Card**
 ```
 mutation {
   destroyCard(token:String!, id:ID!){
@@ -525,7 +529,7 @@ mutation {
 }
 ```
 
-Destroy Connection
+**Delete Connection**
 ```
 mutation {
   destroyConnection(token: String!, id: ID!){
