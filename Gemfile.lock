@@ -50,6 +50,7 @@ GEM
     byebug (10.0.2)
     concurrent-ruby (1.0.5)
     crass (1.0.4)
+    csv (3.0.0)
     erubi (1.7.1)
     factory_bot (4.11.1)
       activesupport (>= 3.0.0)
@@ -176,6 +177,7 @@ PLATFORMS
 DEPENDENCIES
   bcrypt (~> 3.1.7)
   byebug
+  csv
   factory_bot_rails
   faker
   graphiql-rails (= 1.4.4)

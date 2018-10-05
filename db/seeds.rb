@@ -6,6 +6,8 @@
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
 require 'faker'
+require 'csv'
+
 
 def valid_number
   number = Faker::PhoneNumber.cell_phone
@@ -13,6 +15,10 @@ def valid_number
     number = Faker::PhoneNumber.cell_phone
   end
   number
+end
+
+CSV.foreach('db/MOCK_DATA.csv', headers: true) do |row|
+  Quiz.create!(row.to_h)
 end
 
 
