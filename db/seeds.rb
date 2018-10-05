@@ -3,9 +3,11 @@
 #
 # Examples:
 #
-#   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
+#   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }"])
 #   Character.create(name: 'Luke', movie: movies.first)
 require 'faker'
+require 'csv'
+
 
 def valid_number
   number = Faker::PhoneNumber.cell_phone
@@ -15,107 +17,142 @@ def valid_number
   number
 end
 
-User.create!(
-    id: -1,
-    username: "blocker", 
-    password: Faker::Internet.password,
-    email: "block@socialdeck.com"
-  )
+User.create(
+  id: -1,
+  username: "blocked", 
+  password: Faker::Internet.password,
+  email: "blocked@socialdeck.xyz",
+)
 
- card = Card.create!(
-    id:-1,
-    name: "Blocked",
-    display_name: "Blocked",
-    author_id: -1
-  )  
+Card.create!(
+  id:-1,
+  name: "Blocked",
+  display_name: "Blocked",
+  person_name: "Blocked",
+  author_id: -1,
+)
 
-  
-10.times do
-  Address.create!(
-    address1: Faker::Address.street_address,
-    address2: Faker::Address.secondary_address,
-    city: Faker::Address.city,
-    state: Faker::Address.state,
-    postal_code: Faker::Address.zip
-  )
-end
-
-10.times do
-  User.create(
-    username: Faker::Internet.username, 
+CSV.foreach('db/MOCK_DATA.csv', headers: true) do |row|
+  row_hash = row.to_h
+  puts row_hash
+  user_params = {
+    username: row_hash["username"],
     password: "user",
-    email: Faker::Internet.free_email,
-    number: valid_number
-  )
+    email: row_hash["personal_email"],
+    number: row_hash["personal_number"]
+  }
+
+  if User.all.count < 200
+    user = User.create!(user_params)
+    user_id = user.id
+    author_id = user.id
+  else
+    user = User.find(User.where.not(id: -1).pluck(:id).sample)
+    user_id = nil
+    author_id = user.id
+  end
+
+  if row_hash["address1"]
+    address_params = {
+      address1: row_hash["address1"],
+      address2: row_hash["address2"],
+      city: row_hash["city"],
+      state: row_hash["state"],
+      postal_code: row_hash["postal_code"]    
+    }
+
+    address = Address.create!(address_params)
+    address_id = address_id
+  else
+    address_id = nil
+  end
+
+  personal_card_params = {
+    name: "Personal",
+    display_name: "Personal",
+    person_name: row_hash["first_name"] + ' ' + row_hash["last_name"],
+    number: row_hash["personal_number"],
+    email: row_hash["personal_email"],
+    user_id: user_id,
+    author_id: author_id,
+    address_id: address_id,
+    birth_date: row_hash["birth_date"],
+    twitter: rand < 0.3 ? "https://twitter.com/" + row_hash["username"] : nil,
+    linked_in: rand < 0.3 ? "https://linkedin.com/in/" + row_hash["username"]: nil,
+    facebook: rand < 0.3 ? "https://facebook.com/" + row_hash["username"] : nil,
+    instagram: rand < 0.3 ? "https://instagram.com/" + row_hash["username"] : nil    
+  }
+  personal_card = Card.create!(personal_card_params)
+
+  if user_id.nil?
+    Connection.create!(
+      user_id:author_id,
+      contact_id: nil,
+      card_id: personal_card.id
+    )
+  end
+
+  if row_hash["business_name"] && !user_id.nil?
+    work_card_params = {
+      name: "Work",
+      display_name: "Work",
+      person_name: row_hash["first_name"] + ' ' + row_hash["last_name"],
+      business_name: row_hash["business_name"],        
+      number: row_hash["work_number"],
+      email: row_hash["work_email"],
+      user_id: user_id,
+      author_id: author_id   
+    }
+    work_card = Card.create!(work_card_params)
+
+    if user_id.nil?
+      Connection.create!(
+        user_id:author_id,
+        contact_id: nil,
+        card_id: work_card.id
+      )
+    end
+  end
 end
 
+User.all.each do |user| 
+  next if user.id == -1  
 
+  50.times do
+    contact = User.find(User.where.not(id: user.id).pluck(:id).sample)
+    while contact.cards.count == 0
+      contact = User.find(User.where.not(id: user.id).pluck(:id).sample)
+    end
+    card = Card.find(contact.cards.pluck(:id).sample)
 
+    if !Connection.find_by(user_id:user.id, contact_id:contact.id, card_id: card.id)
+      Connection.create!(
+        user_id:user.id,
+        contact_id: contact.id,
+        card_id: card.id
+      )
+    end
+  end
 
-10.times do
-  user = User.find(User.pluck(:id).sample)
-  type = ['Personal', 'Work', 'Family', 'Fake'].sample
-  Card.create!(
-    name: type,
-    display_name: type == 'Fake' ? 'Personal' : type,
-    person_name: Faker::Name.name,
-    business_name: type == 'Work' ? Faker::Bank.name : nil,
-    number: user.number,
-    email: user.email,
-    user_id: user.id,
-    author_id: user.id,
-    address_id: Address.pluck(:id).sample,
-    birth_date: Faker::Date.birthday(18, 65),
-    twitter: rand < 0.3 ? "https://twitter.com/" + user.username : nil,
-    linked_in: rand < 0.3 ? Faker::Name.name : nil,
-    facebook: rand < 0.3 ? Faker::Space.galaxy : nil,
-    instagram: rand < 0.3 ? Faker::GameOfThrones.house : nil
-  )
+  2.times do
+    contact = User.find(User.where.not(id:user.id).pluck(:id).sample)
+    connections = Connection.where(user_id: user.id, contact_id: contact.id)
+    connections.destroy_all
+    Connection.create(
+      user_id:user.id,
+      contact_id: contact.id,
+      card_id: -1
+    )
+  end
 end
 
-10.times do
-  user = User.find(User.pluck(:id).sample)
-  type = ['Personal', 'Work'].sample
-  card = Card.create!(
-    name: type,
-    display_name: type,
-    person_name: Faker::Name.name,
-    business_name: type == 'Work' ? Faker::Company.name : nil,
-    number: valid_number,
-    email: Faker::Internet.email,
-    address_id: Address.pluck(:id).sample,
-    author_id: user.id,
-    birth_date: Faker::Date.birthday(18, 65),
-    twitter: rand < 0.3 ? "https://twitter.com/" + user.username : nil,
-    linked_in: rand < 0.3 ? Faker::Name.name : nil,
-    facebook: rand < 0.3 ? Faker::Space.galaxy : nil,
-    instagram: rand < 0.3 ? Faker::GameOfThrones.house : nil
-  )
-
-  Connection.create!(
-    user_id:user.id,
-    contact_id: nil,
-    card_id: card.id
-  )
-end
-
-10.times do
-  user = User.find(User.pluck(:id).sample)
-  card = Card.find(Card.where("user_id != ?", user.id).pluck(:id).sample)
-  Connection.create!(
-    user_id:user.id,
-    contact_id: card.user_id,
-    card_id: card.id
-  )
-end
-
-10.times do
-  connection = Connection.find(Connection.pluck(:id).sample)
-  Log.create!(
-    user_id:connection.user_id,
-    contact_id: connection.contact_id,
-    card_id: connection.card_id,
-    date: Time.now + [1.day, 2.day, 3.day].sample,
-    text: Faker::GameOfThrones.house
-  )
-end
+# 10.times do
+#   connection = Connection.find(Connection.pluck(:id).sample)
+#   Log.create!(
+#     user_id:connection.user_id,
+#     contact_id: connection.contact_id,
+#     card_id: connection.card_id,
+#     date: Time.now + [1.day, 2.day, 3.day].sample,
+#     text: Faker::GameOfThrones.house
+#   )
+# end
