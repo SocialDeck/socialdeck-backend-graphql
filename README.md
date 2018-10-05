@@ -263,6 +263,7 @@ mutation {
   }
 }
 ```
+
 Create an new user. Will validate email and number.
 
 ```graphql
@@ -276,6 +277,7 @@ mutation {
   }
 }
 ```
+
 Create a new card. If an orphaned card, will automatically create a connection as well. Will validate email and number.
 ```graphql
 mutation {
@@ -319,6 +321,7 @@ mutation {
 }
 
 ```
+
 Create a connection
 ```graphql
 mutation {
@@ -373,6 +376,7 @@ mutation {
   }
 }
 ```
+
 Block User
 ```graphql
 mutation {
@@ -393,6 +397,139 @@ mutation {
     card {
       id
     }
+  }
+}
+```
+
+Update User
+```
+mutation {
+  updateUser(token: String!, username: String!){
+    username
+  }
+}
+```
+
+Update Card
+```
+mutation {
+  updateCard(token:String!, id: 3, cardName: String!, displayName:String!, name:String!, 
+             number:String!,address: {city: String}, twitter:String, facebook:String, linkedIn:String, 
+             instagram:String) {
+    id
+    user {
+      id
+      username
+      email
+      number
+    }
+    author {
+      id
+      username
+      email
+      number
+    }
+    name
+    displayName
+    personName
+    businessName
+    address {
+      address1
+      address2
+      city
+      state
+      postalCode
+    }
+    number
+    email
+    birthDate
+    twitter
+    linkedIn
+    facebook
+    instagram
+    verified
+  }
+}
+```
+
+Update Connection
+```
+mutation {
+  updateConnection(token:String!, id:ID!, cardId:ID!) {
+    id
+    user {
+      id
+      username
+      email
+      number
+    }
+    contact {
+      id
+      username
+      email
+      number
+    }
+    card {
+      id
+      user {
+        id
+        username
+        email
+        number
+      }
+      author {
+        id
+        username
+        email
+        number
+      }
+      name
+      displayName
+      personName
+      businessName
+      address {
+        address1
+        address2
+        city
+        state
+        postalCode
+      }
+      number
+      email
+      birthDate
+      twitter
+      linkedIn
+      facebook
+      instagram
+      verified
+    }
+  }
+}
+```
+
+Destroy User
+```
+mutation {
+  destroyUser(token:String!){
+    message
+  }
+}
+```
+
+Destroy Card
+```
+mutation {
+  destroyCard(token:String!, id:ID!){
+    message
+  }
+}
+```
+
+Destroy Connection
+```
+mutation {
+  destroyConnection(token: String!, id: ID!){
+    message
   }
 }
 ```
