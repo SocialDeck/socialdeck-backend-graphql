@@ -15,7 +15,21 @@ def valid_number
   number
 end
 
+User.create!(
+    id: -1,
+    username: "blocker", 
+    password: Faker::Internet.password,
+    email: "block@socialdeck.com"
+  )
 
+ card = Card.create!(
+    id:-1,
+    name: "Blocked",
+    display_name: "Blocked",
+    author_id: -1
+  )  
+
+  
 10.times do
   Address.create!(
     address1: Faker::Address.street_address,
@@ -30,10 +44,13 @@ end
   User.create(
     username: Faker::Internet.username, 
     password: "user",
-    email: Faker::Internet.email,
+    email: Faker::Internet.free_email,
     number: valid_number
   )
 end
+
+
+
 
 10.times do
   user = User.find(User.pluck(:id).sample)
@@ -59,11 +76,11 @@ end
 10.times do
   user = User.find(User.pluck(:id).sample)
   type = ['Personal', 'Work'].sample
-  Card.create!(
+  card = Card.create!(
     name: type,
     display_name: type,
     person_name: Faker::Name.name,
-    business_name: type == 'Work' ? Faker::Bank.name : nil,
+    business_name: type == 'Work' ? Faker::Company.name : nil,
     number: valid_number,
     email: Faker::Internet.email,
     address_id: Address.pluck(:id).sample,
@@ -74,11 +91,17 @@ end
     facebook: rand < 0.3 ? Faker::Space.galaxy : nil,
     instagram: rand < 0.3 ? Faker::GameOfThrones.house : nil
   )
+
+  Connection.create!(
+    user_id:user.id,
+    contact_id: nil,
+    card_id: card.id
+  )
 end
 
 10.times do
   user = User.find(User.pluck(:id).sample)
-  card = Card.find(Card.pluck(:id).sample)
+  card = Card.find(Card.where("user_id != ?", user.id).pluck(:id).sample)
   Connection.create!(
     user_id:user.id,
     contact_id: card.user_id,
