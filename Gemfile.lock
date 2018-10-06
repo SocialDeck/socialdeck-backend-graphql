@@ -162,6 +162,8 @@ GEM
     valid_email2 (2.3.0)
       activemodel (>= 3.2)
       mail (~> 2.5)
+    warden (1.2.7)
+      rack (>= 1.0)
     web-console (3.7.0)
       actionview (>= 5.0)
       activemodel (>= 5.0)
@@ -196,6 +198,7 @@ DEPENDENCIES
   telephone_number
   tzinfo-data
   valid_email2
+  warden
   web-console (>= 3.3.0)
 
 RUBY VERSION

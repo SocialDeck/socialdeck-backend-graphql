@@ -17,6 +17,7 @@ gem 'puma', '~> 3.11'
 gem 'bcrypt', '~> 3.1.7'
 gem 'jwt'
 gem 'faker'
+gem 'warden'
 
 gem 'telephone_number'
 gem "valid_email2"
