@@ -3,9 +3,9 @@ class CreateCards < ActiveRecord::Migration[5.2]
     create_table :cards do |t|
       t.references :user, foreign_key: true
       t.references :author
-      t.string :name
+      t.string :card_name
       t.string :display_name
-      t.string :person_name
+      t.string :name
       t.string :business_name
       t.references :address, foreign_key: true
       t.string :number

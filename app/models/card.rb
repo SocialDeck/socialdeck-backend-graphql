@@ -1,4 +1,5 @@
 class Card < ApplicationRecord
+  include PgSearch
   belongs_to :user, optional: true
   belongs_to :author, :class_name => 'User'
   belongs_to :address, optional: true
@@ -7,6 +8,14 @@ class Card < ApplicationRecord
   has_many :logs, dependent: :destroy
 
   validates :email, 'valid_email_2/email': true
+
+  pg_search_scope :search,
+                  :against => [:name],
+                  :using => {
+                    :trigram => {
+                      :threshold => 0.2
+                    }
+                  }                  
 
   def number=(number)
     phone_object = TelephoneNumber.parse(number, :us)
