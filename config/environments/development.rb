@@ -35,6 +35,16 @@ Rails.application.configure do
 
   config.action_mailer.perform_caching = false
 
+  ActionMailer::Base.smtp_settings = {
+    :user_name => 'apikey',
+    :password => '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',
+    :domain => 'socialdeck.xyz',
+    :address => 'smtp.sendgrid.net',
+    :port => 587,
+    :authentication => :plain,
+    :enable_starttls_auto => true
+  }
+
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
 

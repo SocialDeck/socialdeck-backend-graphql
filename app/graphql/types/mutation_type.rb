@@ -30,6 +30,7 @@ module Types
           username: user[:username],
           password: user[:password]
         )
+        UserNotifier.send_signup_email(user).deliver
     end
 
     field :updateUser, Types::UserType, null: false do
