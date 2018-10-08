@@ -10,14 +10,12 @@
     user {
       id
       username
-      email
-      number
+      name
     }
     author {
       id
       username
-      email
-      number
+      name
     }
     name
     displayName
@@ -50,8 +48,7 @@
   users {
     id
     username
-    email
-    number
+    name
   }
 }
 ```
@@ -65,28 +62,24 @@
     user {
       id
       username
-      email
-      number
+      name
     }
     contact {
       id
       username
-      email
-      number
+      name
     }
     card {
       id
       user {
         id
         username
-        email
-        number
+        name
       }
       author {
         id
         username
-        email
-        number
+        name
       }
       name
       displayName
@@ -123,14 +116,12 @@
     user {
       id
       username
-      email
-      number
+      name
     }
     author {
       id
       username
-      email
-      number
+      name
     }
     name
     displayName
@@ -162,14 +153,12 @@
     user {
       id
       username
-      email
-      number
+      name
     }
     author {
       id
       username
-      email
-      number
+      name
     }
     name
     displayName
@@ -201,14 +190,12 @@
     user {
       id
       username
-      email
-      number
+      name
     }
     author {
       id
       username
-      email
-      number
+      name
     }
     name
     displayName
@@ -257,8 +244,7 @@ mutation {
     user {
       id
       username
-      email
-      number
+      name
     }
     token
   }
@@ -271,11 +257,13 @@ mutation {
 ```graphql
 mutation {
   createUser(user: {username:String!, password:String!}!, 
-             email:String!, number:String!) {
-    id
-    username
-    email
-    number
+             email:String!, name:String!) {
+    token
+    user{
+        id
+        username
+        name
+    }
   }
 }
 ```
@@ -293,14 +281,12 @@ mutation {
     user {
       id
       username
-      email
-      number
+      name
     }
     author {
       id
       username
-      email
-      number
+      name
     }
     name
     displayName
@@ -334,28 +320,24 @@ mutation {
     user {
       id
       username
-      email
-      number
+      name
     }
     contact {
       id
       username
-      email
-      number
+      name
     }
     card {
       id
       user {
         id
         username
-        email
-        number
+        name
       }
       author {
         id
         username
-        email
-        number
+        name
       }
       name
       displayName
@@ -389,14 +371,12 @@ mutation {
     user {
       id
       username
-      email
-      number
+      name
     }
     contact {
       id
       username
-      email
-      number
+      name
     }
     card {
       id
@@ -408,8 +388,10 @@ mutation {
 **Update User**
 ```
 mutation {
-  updateUser(token: String!, username: String!){
+  updateUser(token: String!, username: String, name:String, password:String, email:String){
+    id
     username
+    name
   }
 }
 ```
@@ -424,14 +406,12 @@ mutation {
     user {
       id
       username
-      email
-      number
+      name
     }
     author {
       id
       username
-      email
-      number
+      name
     }
     name
     displayName
@@ -464,28 +444,24 @@ mutation {
     user {
       id
       username
-      email
-      number
+      name
     }
     contact {
       id
       username
-      email
-      number
+      name
     }
     card {
       id
       user {
         id
         username
-        email
-        number
+        name
       }
       author {
         id
         username
-        email
-        number
+        name
       }
       name
       displayName
