@@ -52,6 +52,17 @@ module Types
         current_user
       end
       UserNotifier.send_update_email(user).deliver
+      
+      def reset_password(user:)
+        credential_user = User.find_by_username(user[:username])
+        if credential_user && credential_user.authenticate(user[:email])
+          OpenStruct.new({
+            token: credential_user.email,
+            user: credential_user
+          })
+        end
+        UserNotifier.send_reset_password_email(user).deliver
+      end
     end
 
     field :blockUser, Types::LinkType, null: true do

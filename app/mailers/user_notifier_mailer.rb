@@ -18,4 +18,12 @@ class UserNotifierMailer < ApplicationMailer
       )
     end
 
+    def send_reset_password_email(user)
+      @user = user
+      mail(
+        :to => @user.email,
+        :subject => 'Reset Password Request'
+      )
+    end
+
 end
