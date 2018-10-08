@@ -19,6 +19,8 @@ gem 'jwt'
 gem 'faker'
 gem 'warden'
 gem 'sendgrid-ruby'
+gem 'figaro'
+
 
 gem 'telephone_number'
 gem "valid_email2"

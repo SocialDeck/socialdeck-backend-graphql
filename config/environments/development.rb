@@ -37,7 +37,7 @@ Rails.application.configure do
 
   ActionMailer::Base.smtp_settings = {
     :user_name => 'apikey',
-    :password => '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',
+    :password => 'ENV',
     :domain => 'socialdeck.xyz',
     :address => 'smtp.sendgrid.net',
     :port => 587,
