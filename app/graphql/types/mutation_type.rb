@@ -51,6 +51,7 @@ module Types
       if current_user.update(user_params)
         current_user
       end
+      UserNotifier.send_update_email(user).deliver
     end
 
     field :blockUser, Types::LinkType, null: true do
