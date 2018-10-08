@@ -26,4 +26,20 @@ class UserNotifierMailer < ApplicationMailer
       )
     end
 
+    def send_connection_email(user)
+      @user = user
+      mail(
+        :to => @user.email,
+        :subject => 'New Connection!'
+      )
+    end
+
+    def send_connection_update_email(user)
+      @user = user
+      mail(
+        :to => @user.email,
+        :subject => 'Connection Update!'
+      )
+    end
+
 end

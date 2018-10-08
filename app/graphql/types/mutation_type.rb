@@ -30,7 +30,7 @@ module Types
           username: user[:username],
           password: user[:password]
         )
-        UserNotifier.send_signup_email(user).deliver
+        UserNotifierMailer.send_signup_email(user).deliver
     end
 
     field :updateUser, Types::UserType, null: false do
@@ -51,7 +51,7 @@ module Types
       if current_user.update(user_params)
         current_user
       end
-      UserNotifier.send_update_email(user).deliver
+      UserNotifierMailer.send_update_email(user).deliver
       
       def reset_password(user:)
         credential_user = User.find_by_username(user[:username])
@@ -61,7 +61,7 @@ module Types
             user: credential_user
           })
         end
-        UserNotifier.send_reset_password_email(user).deliver
+        UserNotifierMailer.send_reset_password_email(user).deliver
       end
     end
 
@@ -275,6 +275,8 @@ module Types
             card_id: card.id
           )
       end
+      UserNotifierMailer.send_connection_email(user).deliver
+
     end
 
     field :updateConnection, Types::LinkType, null: true do
@@ -296,6 +298,7 @@ module Types
       if connection.update(card_id: card.id)
           connection
       end
+      UserNotifierMailer.send_connection_update_email(user).deliver
     end
 
     field :destroyConnection, Types::NullType, null: true do
@@ -319,6 +322,7 @@ module Types
           message: connection.errors.full_message
         })
       end
+      UserNotifierMailer.send_connection_update_email(user).deliver
     end
 
     #LOGS!!!
