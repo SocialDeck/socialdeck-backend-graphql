@@ -36,10 +36,23 @@ module Types
     end
 
     def share_card(token:, id:)
-      current_user = AuthorizeUserRequest.call(token).result
-      owned_card = Card.find_by(user_id: current_user.id, id: id)
-      token = AuthenticateCard.call(current_user.id, owned_card.id).result
-      RQRCode::QRCode.new("https://socialdeck-3c370.firebaseapp.com/contacts/#{token}").as_svg
+      user = AuthorizeUserRequest.call(token).result
+      card = Card.find_by(user_id: user.id, id: id)
+      card_token = AuthenticateCard.call(user.id, card.id).result
+      RQRCode::QRCode.new("https://socialdeck-3c370.firebaseapp.com/contacts/#{card_token}").as_svg
+    end 
+
+    field :share_card_by_email, String, null: true do
+      argument :token, String, required: true
+      argument :id, ID, required: true
+      argument :email, String, required: true
+    end
+
+    def share_card_by_email(token:, id:, email:)
+      user = AuthorizeUserRequest.call(token).result
+      card = Card.find_by(user_id: current_user.id, id: id)
+      card_token = AuthenticateCard.call(user.id, card.id).result
+      UserNotifierMailer.send_card_email(user, card, card_token, email).deliver
     end 
 
     field :authored_cards, [Types::CardType], null: true do

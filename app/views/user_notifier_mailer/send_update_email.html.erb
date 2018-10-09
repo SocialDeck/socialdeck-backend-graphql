@@ -1,0 +1,5 @@
+<p>Hello <%= @user.name %>!</p>
+
+<p>Please click the following link to see what updates were made on your account:</p>
+
+<p><%= link_to 'View account updates', "socialdeck.xyz/account/updates/#{@token}" %></p>

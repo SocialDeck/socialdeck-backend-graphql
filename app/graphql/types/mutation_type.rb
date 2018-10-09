@@ -25,18 +25,34 @@ module Types
     end
 
     def create_user(user:, name:, email:)
-      user = User.create!(
+      user = User.new(
           email: email,
           name: name,
           username: user[:username],
           password: user[:password]
         )
 
-      OpenStruct.new({
-        token: JsonWebToken.encode(user_id: user.id),
-        user: user
-      })        
+      if user.save
+        token = JsonWebToken.encode(user_id: user.id, exp: 48.hours.from_now)
+        UserNotifierMailer.send_signup_email(user, token).deliver
+        OpenStruct.new({
+          token: JsonWebToken.encode(user_id: user.id),
+          user: user
+        }) 
+      end       
     end
+
+    field :confirmUser, Types::UserType, null: false do
+      argument :token, String, required: true
+   end
+
+    def confirm_user(token:)
+      user = AuthorizeUserRequest.call(token).result
+      if user.update(confirmed: true)
+        user
+      end
+    end
+
 
     field :updateUser, Types::UserType, null: false do
       argument :token, String, required: true
@@ -47,16 +63,33 @@ module Types
    end
 
     def update_user(token:, username:nil, password:nil, name:nil, email:nil)
-      current_user = AuthorizeUserRequest.call(token).result
+      user = AuthorizeUserRequest.call(token).result
       user_params = {email: email,
                      name: name,
                      username: username,
                      password: password}.compact
 
-      if current_user.update(user_params)
-        current_user
+      if user.update(user_params)
+        UserNotifierMailer.send_update_email(user).deliver
+        user
       end
     end
+
+    field :reset_password, Types::NullType, null: false do
+      argument :username, String, required: true
+   end
+
+    def reset_password(username:)
+      user = User.find_by_username(username)
+      token = JsonWebToken.encode(user_id: user.id, exp: 3.hours.from_now)
+      UserNotifierMailer.send_reset_password_email(user, token).deliver
+
+      OpenStruct.new({
+        message: "Message sent"
+      })
+
+    end
+    
 
     field :blockUser, Types::LinkType, null: true do
       argument :token, String, required: true
@@ -113,6 +146,7 @@ module Types
       argument :linked_in, String, required: false
       argument :facebook, String, required: false
       argument :instagram, String, required: false
+      argument :invite, Boolean, required: true
     end
 
     def create_card(token:, owned:true, card_name:, display_name:nil, name:, 
@@ -221,6 +255,7 @@ module Types
       if card.update(card_params)
         card
       end
+      
     end
 
     field :destroyCard, Types::NullType, null: true do
@@ -263,6 +298,8 @@ module Types
             card_id: card.id
           )
       end
+      UserNotifierMailer.send_connection_email(user).deliver
+
     end
 
     field :updateConnection, Types::LinkType, null: true do
@@ -307,6 +344,7 @@ module Types
           message: connection.errors.full_message
         })
       end
+      UserNotifierMailer.send_connection_update_email(user).deliver
     end
 
     # Log Mutations
