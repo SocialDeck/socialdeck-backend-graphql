@@ -1,72 +1,114 @@
+require 'rqrcode'
+
 module Types
   class QueryType < Types::BaseObject
 
+    # User Endpoints
+
+    field :login, Types::TokenType, null: true do
+      argument :user, Types::AuthProviderUsernameInput, required: true
+    end
+
+    def login(user:)
+      credential_user = User.find_by_username(user[:username])
+      if credential_user && credential_user.authenticate(user[:password])
+        exp = user[:remember] ? 1.month.from_now : 2.hours.from_now
+        OpenStruct.new({
+          token: JsonWebToken.encode(user_id: credential_user.id, exp: exp),
+          user: credential_user
+        })
+      end
+    end    
+    
     field :users, [Types::UserType], null: true 
-
-    field :contacts, [Types::CardType], null: true do
-      argument :token, String, required: true
-    end
-
-    field :logs, [Types::LogType], null: true do
-      argument :card_id, ID, required: true
-      argument :token, String, required: true
-    end
-
-    field :card, Types::CardType, null: true do
-      argument :id, ID, required: true
-      argument :token, String, required: true
-    end
-
-    field :authored_cards, [Types::CardType], null: true do
-      argument :token, String, required: true
-    end
-
-    field :owned_cards, [Types::CardType], null: true do
-      argument :token, String, required: true
+        
+    def users
+      User.all
     end
 
     field :blocked_Users, [Types::UserType], null: true do
       argument :token, String, required: true
     end
 
-    # Then provide an implementation:
-    def logs(card_id:, token:)
-      current_user = User.find_by(token: token)
-      Log.where(card_id: card_id, user_id: current_user.id)
+    def blocked_users(token:)
+      current_user = AuthorizeUserRequest.call(token).result
+      User.where(id: Connection.where(card_id: -1, contact_id: current_user.id).pluck(:user_id))
     end
 
-    def card(id:, token:)
-      current_user = User.find_by(token: token)
-      connection = Connection.find_by(user_id: current_user.id, card_id: id)
-      owned_card = Card.find_by(user_id: current_user.id, id: id)
-      authored_card = Card.find_by(author_id: current_user.id, id: id)
-      if connection || owned_card || authored_card
-        Card.find(id)
-      end
+    # Card Queries
+
+    field :card, Types::CardType, null: true do
+      argument :card_token, String, required: true
+    end
+
+    def card(card_token:)
+      card = AuthorizedCardRequest.call(card_token).result
     end    
 
+    field :share_card, String, null: true do
+      argument :token, String, required: true
+      argument :id, ID, required: true
+    end
+
+    def share_card(token:, id:)
+      current_user = AuthorizeUserRequest.call(token).result
+      owned_card = Card.find_by(user_id: current_user.id, id: id)
+      token = AuthenticateCard.call(current_user.id, owned_card.id).result
+      RQRCode::QRCode.new("https://socialdeck-3c370.firebaseapp.com/contacts/#{token}").as_svg
+    end 
+
+    field :authored_cards, [Types::CardType], null: true do
+      argument :token, String, required: true
+    end
+
     def authored_cards(token:)
-      current_user = User.find_by(token: token)
+      current_user = AuthorizeUserRequest.call(token).result
       Card.where(author_id: current_user.id, user_id: nil)
     end     
 
+    field :owned_cards, [Types::CardType], null: true do
+      argument :token, String, required: true
+    end
+
     def owned_cards(token:)
-      current_user = User.find_by(token: token)
+      current_user = AuthorizeUserRequest.call(token).result
       Card.where(user_id: current_user.id)
     end
 
-    def users
-      User.all
+    field :contacts, [Types::CardType], null: true do
+      argument :token, String, required: true
+      argument :search, String, required: false
     end
 
-    def contacts(token:)
-      current_user = User.find_by(token: token)
-      Card.where(id: Connection.where(user_id: current_user.id).pluck(:card_id)).where.not(id: -1)
+    def contacts(token:, search:nil)
+      current_user = AuthorizeUserRequest.call(token).result
+      if search
+        Card.where(id: Connection.where(user_id: current_user.id).pluck(:card_id)).where.not(id: -1).search(search)
+      else
+        Card.where(id: Connection.where(user_id: current_user.id).pluck(:card_id)).where.not(id: -1)
+      end
     end
 
-    def blocked_users(token:)
-      current_user = User.find_by(token: token)
-      User.where(id: Connection.where(card_id: -1, user_id: current_user.id).pluck(:contact_id))
+    # Connection Queries
+
+    field :subscibers, [Types::LinkType], null: true do
+      argument :token, String, required: true
     end
+
+    def subscibers(token:)
+      current_user = AuthorizeUserRequest.call(token).result
+      Connection.where(contact_id: current_user.id).where.not(card_id: -1)
+    end
+
+    # field :logs, [Types::LogType], null: true do
+    #   argument :card_id, ID, required: true
+    #   argument :token, String, required: true
+    # end
+
+    # def logs(card_id:, token:)
+    #   current_user = AuthorizeUserRequest.call(token).result
+    #   Log.where(card_id: card_id, user_id: current_user.id)
+    # end    
+
   end
 end

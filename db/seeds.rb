@@ -1,35 +1,21 @@
-# This file should contain all the record creation needed to seed the database with its default values.
-# The data can then be loaded with the rails db:seed command (or created alongside the database with db:setup).
-#
-# Examples:
-#
-#   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }"])
-#   Character.create(name: 'Luke', movie: movies.first)
 require 'faker'
 require 'csv'
-
-
-def valid_number
-  number = Faker::PhoneNumber.cell_phone
-  while TelephoneNumber.invalid?(number, :us)
-    number = Faker::PhoneNumber.cell_phone
-  end
-  number
-end
 
 User.create(
   id: -1,
   username: "blocked", 
   password: Faker::Internet.password,
+  name: "Blocked",
   email: "blocked@socialdeck.xyz",
+  confirmed: true
 )
 
 Card.create!(
   id:-1,
-  name: "Blocked",
+  card_name: "Blocked",
   display_name: "Blocked",
-  person_name: "Blocked",
-  author_id: -1,
+  name: "Blocked",
+  author_id: -1
 )
 
 CSV.foreach('db/MOCK_DATA.csv', headers: true) do |row|
@@ -38,11 +24,12 @@ CSV.foreach('db/MOCK_DATA.csv', headers: true) do |row|
   user_params = {
     username: row_hash["username"],
     password: "user",
+    name: row_hash["first_name"] + ' ' + row_hash["last_name"],
     email: row_hash["personal_email"],
-    number: row_hash["personal_number"]
+    confirmed: true
   }
 
-  if User.all.count < 200
+  if User.all.count < 100
     user = User.create!(user_params)
     user_id = user.id
     author_id = user.id
@@ -68,9 +55,9 @@ CSV.foreach('db/MOCK_DATA.csv', headers: true) do |row|
   end
 
   personal_card_params = {
-    name: "Personal",
+    card_name: "Personal",
     display_name: "Personal",
-    person_name: row_hash["first_name"] + ' ' + row_hash["last_name"],
+    name: row_hash["first_name"] + ' ' + row_hash["last_name"],
     number: row_hash["personal_number"],
     email: row_hash["personal_email"],
     user_id: user_id,
@@ -94,9 +81,9 @@ CSV.foreach('db/MOCK_DATA.csv', headers: true) do |row|
 
   if row_hash["business_name"] && !user_id.nil?
     work_card_params = {
-      name: "Work",
+      card_name: "Work",
       display_name: "Work",
-      person_name: row_hash["first_name"] + ' ' + row_hash["last_name"],
+      name: row_hash["first_name"] + ' ' + row_hash["last_name"],
       business_name: row_hash["business_name"],        
       number: row_hash["work_number"],
       email: row_hash["work_email"],
@@ -118,29 +105,40 @@ end
 User.all.each do |user| 
   next if user.id == -1  
 
-  50.times do
-    contact = User.find(User.where.not(id: user.id).pluck(:id).sample)
+  while user.contacts.count < 75
+    contact = User.find(User.where.not(id: -1).where.not(id: user.id).pluck(:id).sample)  
     while contact.cards.count == 0
-      contact = User.find(User.where.not(id: user.id).pluck(:id).sample)
+      contact = User.find(User.where.not(id: -1).where.not(id: user.id).pluck(:id).sample)
     end
-    card = Card.find(contact.cards.pluck(:id).sample)
 
-    if !Connection.find_by(user_id:user.id, contact_id:contact.id, card_id: card.id)
+    contact_card = Card.find(contact.cards.pluck(:id).sample)
+
+    if !Connection.find_by(user_id:user.id, contact_id:contact.id, card_id: contact_card.id)
       Connection.create!(
-        user_id:user.id,
+        user_id: user.id,
         contact_id: contact.id,
-        card_id: card.id
+        card_id: contact_card.id
       )
-    end
+    end    
+
+    user_card = Card.find(user.cards.pluck(:id).sample)
+
+    if !Connection.find_by(user_id:contact.id, contact_id:user.id, card_id: user_card.id)
+      Connection.create!(
+        user_id: contact.id,
+        contact_id: user.id,
+        card_id: user_card.id
+      )
+    end      
   end
 
   2.times do
-    contact = User.find(User.where.not(id:user.id).pluck(:id).sample)
-    connections = Connection.where(user_id: user.id, contact_id: contact.id)
+    contact = User.find(User.where.not(id: -1).where.not(id: user.id).pluck(:id).sample)
+    connections = Connection.where(user_id: contact.id, contact_id: user.id)
     connections.destroy_all
     Connection.create(
-      user_id:user.id,
-      contact_id: contact.id,
+      user_id: contact.id,
+      contact_id: user.id,
       card_id: -1
     )
   end

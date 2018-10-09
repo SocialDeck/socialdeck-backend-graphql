@@ -1,48 +1,40 @@
 module Types
   class MutationType < Types::BaseObject
 
-    field :login, Types::TokenType, null: true do
+    # User Mutations
+
+    field :createUser, Types::TokenType, null: false do
       argument :user, Types::AuthProviderUsernameInput, required: true
-    end
-
-    def login(user:)
-      credential_user = User.find_by_username(user[:username])
-      if credential_user && credential_user.authenticate(user[:password])
-        OpenStruct.new({
-          token: credential_user.token,
-          user: credential_user
-        })
-      end
-    end
-
-    #USERS!!!
-
-    field :createUser, Types::UserType, null: false do
-      argument :user, Types::AuthProviderUsernameInput, required: true
+      argument :name, String, required: true
       argument :email, String, required: true
-      argument :number, String, required: false
     end
 
-    def create_user(user:, email:, number:nil)
-      User.create!(
+    def create_user(user:, name:, email:)
+      user = User.create!(
           email: email,
           number: number,
           username: user[:username],
           password: user[:password]
         )
         UserNotifierMailer.send_signup_email(user).deliver
+
+
+      OpenStruct.new({
+        token: JsonWebToken.encode(user_id: user.id),
+        user: user
+      })        
     end
 
     field :updateUser, Types::UserType, null: false do
       argument :token, String, required: true
       argument :username, String, required: false
+      argument :name, String, required: false
       argument :password, String, required: false
       argument :email, String, required: false
-      argument :number, String, required: false
    end
 
     def update_user(token:, username:nil, password:nil, email:nil, number:nil)
-      current_user = User.find_by(token: token)
+      current_user = AuthorizeUserRequest.call(token).result
       user_params = {email: email,
                      number: number,
                      username: username,
@@ -71,17 +63,14 @@ module Types
     end
 
     def block_user(token:, user_id:)
-      current_user = User.find_by(token: token)
-
-      connections = Connection.where(contact_id:current_user.id, user_id:user_id)
-      connections.destroy_all
+      current_user = AuthorizeUserRequest.call(token).result
 
       connections = Connection.where(user_id:current_user.id, contact_id:user_id)
       connections.destroy_all
 
       Connection.create!(
-            user_id: current_user.id,
-            contact_id: user_id,
+            user_id: user_id,
+            contact_id: current_user.id,
             card_id: -1
           )
 
@@ -92,7 +81,7 @@ module Types
     end
 
     def destroy_user(token:)
-      current_user = User.find_by(token: token)
+      current_user = AuthorizeUserRequest.call(token).result
       return unless current_user
 
       if current_user.destroy
@@ -106,7 +95,7 @@ module Types
       end
     end
 
-    #CARDS!!!
+    # Card Mutations
 
     field :createCard, Types::CardType, null: true do
       argument :token, String, required: true
@@ -128,7 +117,7 @@ module Types
     def create_card(token:, owned:true, card_name:, display_name:nil, name:, 
                     business_name:nil, number:nil, email:nil, address:nil, birth_date:nil,
                     twitter:nil, facebook:nil, linked_in:nil, instagram:nil)
-      current_user = User.find_by(token: token)
+      current_user = AuthorizeUserRequest.call(token).result
       if address
         address_object = Address.find_by(address.to_h)
         unless address_object
@@ -146,9 +135,9 @@ module Types
       end
 
       card = Card.create!(
-          name: card_name,
+          card_name: card_name,
           display_name: display_name || card_name,
-          person_name: name,
+          name: name,
           business_name: business_name,
           number: number,
           email: email,
@@ -162,7 +151,7 @@ module Types
           instagram: instagram
         )
 
-      if not owner
+      if not owned
           Connection.create!(
             user_id: current_user.id,
             contact_id: nil,
@@ -193,7 +182,7 @@ module Types
     def update_card(token:, id:, card_name:nil, display_name:nil, name:nil, 
                     business_name:nil, number:nil, email:nil, address:nil, birth_date:nil,
                     twitter:nil, facebook:nil, linked_in:nil, instagram:nil)
-      current_user = User.find_by(token: token)
+      current_user = AuthorizeUserRequest.call(token).result
       card = Card.find_by(id: id, author_id:current_user.id)
       return unless card
 
@@ -215,9 +204,9 @@ module Types
         address_id = nil  
       end
 
-      card_params = {name: card_name, 
+      card_params = {card_name: card_name, 
                      display_name: display_name, 
-                     person_name: name, 
+                     name: name, 
                      business_name: business_name, 
                      number:number, 
                      email: email, 
@@ -239,7 +228,7 @@ module Types
     end
 
     def destroy_card(token:, id:)
-      current_user = User.find_by(token: token)
+      current_user = AuthorizeUserRequest.call(token).result
       return unless current_user
 
       card = Card.find_by(id: id, author_id:current_user.id)
@@ -256,18 +245,16 @@ module Types
       end
     end
 
-    #CONNECTIONS!!!
+    # Connection Mutations
 
     field :createConnection, Types::LinkType, null: true do
       argument :token, String, required: true
       argument :card_id, ID, required: true
     end
 
-    def create_connection(token:, card_id:)
-      # TODO: Add QR Code support
-      current_user = User.find_by(token: token)
-      card = Card.find(card_id)
-      print card.user_id
+    def create_connection(token:, card_token:)
+      current_user = AuthorizeUserRequest.call(token).result
+      card = AuthorizedCardRequest.call(card_token).result
       if card
           Connection.create!(
             user_id: current_user.id,
@@ -286,7 +273,7 @@ module Types
     end
 
     def update_connection(token:, id:, card_id:)
-      current_user = User.find_by(token: token)
+      current_user = AuthorizeUserRequest.call(token).result
       return unless current_user
 
       connection = Connection.find_by(id:id, contact_id:current_user.id)
@@ -307,7 +294,7 @@ module Types
     end
 
     def destroy_connection(token:, id:)
-      current_user = User.find_by(token: token)
+      current_user = AuthorizeUserRequest.call(token).result
       return unless current_user
 
       connection = Connection.find_by(id:id, contact_id:current_user.id) || Connection.find_by(id:id, user_id:current_user.id)
@@ -325,7 +312,7 @@ module Types
       UserNotifierMailer.send_connection_update_email(user).deliver
     end
 
-    #LOGS!!!
+    # Log Mutations
 
     # field :createLog, Types::LogType, null: false do
     #   argument :user, Types::UserType, required: true
@@ -344,7 +331,7 @@ module Types
     # end
 
     # def create_log(token:, card_id:)
-    #   current_user = User.find_by(token: token)
+    #   current_user = AuthorizeUserRequest.call(token).result
     #   log = Log.find(log_id)
     #   print log.user_id
     #   if log
@@ -357,7 +344,7 @@ module Types
     # end
 
     # def update_log(token:, card_id:)
-    #   current_user = User.find_by(token: token)
+    #   current_user = AuthorizeUserRequest.call(token).result
     #   return unless current_user
 
     #   log = Log.find_by(id:id, contact_id:current_user.id)
@@ -372,7 +359,7 @@ module Types
     # end
 
     # def destroy_log
-    #   current_user = User.find_by(token: token)
+    #   current_user = AuthorizeUserRequest.call(token).result
     #   return unless current_user
 
     #   log = Log.find_by(id:id, contact_id:current_user.id)
