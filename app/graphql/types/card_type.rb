@@ -16,16 +16,16 @@ module Types
     field :facebook, String, null: true
     field :instagram, String, null: true
     field :verified, Boolean, null: false
-    field :token, String, null: false do
-      argument :user_token, String, required: true
+    field :card_token, String, null: false do
+      argument :token, String, required: true
     end
 
     def verified
       !!object.user_id
     end
 
-    def token(user_token:)
-      current_user = AuthorizeUserRequest.call(user_token).result
+    def card_token(token:)
+      current_user = AuthorizeUserRequest.call(token).result
       AuthenticateCard.call(current_user.id, object.id).result
     end    
   end

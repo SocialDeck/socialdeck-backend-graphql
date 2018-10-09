@@ -250,7 +250,7 @@ module Types
 
     field :createConnection, Types::LinkType, null: true do
       argument :token, String, required: true
-      argument :card_id, ID, required: true
+      argument :card_token, ID, required: true
     end
 
     def create_connection(token:, card_token:)
