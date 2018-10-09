@@ -146,7 +146,7 @@ module Types
       argument :linked_in, String, required: false
       argument :facebook, String, required: false
       argument :instagram, String, required: false
-      argument :invite, Boolean, required: true
+      # argument :invite, Boolean, required: false
     end
 
     def create_card(token:, owned:true, card_name:, display_name:nil, name:, 
