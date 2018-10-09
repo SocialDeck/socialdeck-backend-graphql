@@ -20,7 +20,6 @@ Card.create!(
 
 CSV.foreach('db/MOCK_DATA.csv', headers: true) do |row|
   row_hash = row.to_h
-  puts row_hash
   user_params = {
     username: row_hash["username"],
     password: "user",
@@ -105,7 +104,7 @@ end
 User.all.each do |user| 
   next if user.id == -1  
 
-  while user.contacts.count < 75
+  while user.contacts.count < 50
     contact = User.find(User.where.not(id: -1).where.not(id: user.id).pluck(:id).sample)  
     while contact.cards.count == 0
       contact = User.find(User.where.not(id: -1).where.not(id: user.id).pluck(:id).sample)

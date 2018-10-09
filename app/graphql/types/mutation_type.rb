@@ -27,7 +27,7 @@ module Types
     def create_user(user:, name:, email:)
       user = User.create!(
           email: email,
-          number: number,
+          name: name,
           username: user[:username],
           password: user[:password]
         )
@@ -46,10 +46,10 @@ module Types
       argument :email, String, required: false
    end
 
-    def update_user(token:, username:nil, password:nil, email:nil, number:nil)
+    def update_user(token:, username:nil, password:nil, name:nil, email:nil)
       current_user = AuthorizeUserRequest.call(token).result
       user_params = {email: email,
-                     number: number,
+                     name: name,
                      username: username,
                      password: password}.compact
 
