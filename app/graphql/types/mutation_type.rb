@@ -255,6 +255,7 @@ module Types
       if card.update(card_params)
         card
       end
+      
     end
 
     field :destroyCard, Types::NullType, null: true do
@@ -320,7 +321,6 @@ module Types
       if connection.update(card_id: card.id)
           connection
       end
-      UserNotifierMailer.send_connection_update_email(user).deliver
     end
 
     field :destroyConnection, Types::NullType, null: true do

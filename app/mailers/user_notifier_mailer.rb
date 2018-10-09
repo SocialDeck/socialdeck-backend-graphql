@@ -36,11 +36,13 @@ class UserNotifierMailer < ApplicationMailer
       )
     end
 
-    def send_connection_update_email(user)
+    def send_card_email(user, card, card_token, email)
       @user = user
+      @card_token = card_token
+      @card = card
       mail(
-        :to => @user.email,
-        :subject => 'Connection Update!'
+        :to => email,
+        :subject => "#{card.name} shared their #{card.display_name} card with you!"
       )
     end
 
