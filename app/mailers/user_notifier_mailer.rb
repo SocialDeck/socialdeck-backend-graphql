@@ -2,11 +2,12 @@ class UserNotifierMailer < ApplicationMailer
     default :from => 'info@socialdeck.com'
   
     # send a signup email to the user, pass in the user object that contains the user's email address
-    def send_signup_email(user)
+    def send_signup_email(user, token)
       @user = user
+      @token = token
       mail( 
         :to => @user.email,
-        :subject => 'Thanks for signing up for our amazing app' 
+        :subject => 'Thanks for signing up for SocialDeck!' 
       )
     end
 
@@ -18,8 +19,9 @@ class UserNotifierMailer < ApplicationMailer
       )
     end
 
-    def send_reset_password_email(user)
+    def send_reset_password_email(user, token)
       @user = user
+      @token = token
       mail(
         :to => @user.email,
         :subject => 'Reset Password Request'
@@ -34,11 +36,13 @@ class UserNotifierMailer < ApplicationMailer
       )
     end
 
-    def send_connection_update_email(user)
+    def send_card_email(user, card, card_token, email)
       @user = user
+      @card_token = card_token
+      @card = card
       mail(
-        :to => @user.email,
-        :subject => 'Connection Update!'
+        :to => email,
+        :subject => "#{card.name} shared their #{card.display_name} card with you!"
       )
     end
 

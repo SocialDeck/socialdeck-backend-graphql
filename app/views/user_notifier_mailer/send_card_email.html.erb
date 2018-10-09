@@ -1,0 +1,7 @@
+<p>Hello!</p>
+
+<p><%= @card.name %> shared their <%= @card.display_name %> card with you!</p>
+
+<p>To view the card visit:</p>
+
+<p><%= link_to 'View Card', "https://socialdeck-3c370.firebaseapp.com/contacts/#{@card_token}" %></p>
