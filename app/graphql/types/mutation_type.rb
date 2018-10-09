@@ -299,7 +299,6 @@ module Types
           )
       end
       UserNotifierMailer.send_connection_email(user).deliver
-
     end
 
     field :updateConnection, Types::LinkType, null: true do
@@ -349,64 +348,75 @@ module Types
 
     # Log Mutations
 
-    # field :createLog, Types::LogType, null: false do
-    #   argument :user, Types::UserType, required: true
-    #   argument :contact, Types::UserType, required: false
-    #   argument :card, Types::CardType, required: true
-    #   argument :date, String, required: false
-    #   argument :text, String, required: true
-    # end
+    field :createLog, Types::LogType, null: false do
+      argument :user, Types::UserType, required: true
+      argument :contact, Types::UserType, required: false
+      argument :card, Types::CardType, required: true
+      argument :date, String, required: false
+      argument :text, String, required: true
+    end
 
-    # field :updateLog, Types::LogType, null: false do
-    #   argument :user, Types::UserType, required: true
-    #   argument :contact, Types::UserType, required: false
-    #   argument :card, Types::CardType, required: true
-    #   argument :date, String, required: false
-    #   argument :text, String, required: false
-    # end
+    def create_log(token:, card_id:)
+      current_user = AuthorizeUserRequest.call(token).result
+      log = Log.find(log_id)
+      print log.user_id
+      if log
+          Log.create!(
+            user_id: current_user.id,
+            contact_id: card.user_id,
+            card_id: card.id
+          )
+      end
+    end
 
-    # def create_log(token:, card_id:)
-    #   current_user = AuthorizeUserRequest.call(token).result
-    #   log = Log.find(log_id)
-    #   print log.user_id
-    #   if log
-    #       Log.create!(
-    #         user_id: current_user.id,
-    #         contact_id: card.user_id,
-    #         card_id: card.id
-    #       )
-    #   end
-    # end
+    field :updateLog, Types::LogType, null: false do
+      argument :user, Types::UserType, required: true
+      argument :contact, Types::UserType, required: false
+      argument :card, Types::CardType, required: true
+      argument :date, String, required: false
+      argument :text, String, required: true
+    end
 
-    # def update_log(token:, card_id:)
-    #   current_user = AuthorizeUserRequest.call(token).result
-    #   return unless current_user
+    def update_log(token:, card_id:)
+      current_user = AuthorizeUserRequest.call(token).result
+      return unless current_user
 
-    #   log = Log.find_by(id:id, contact_id:current_user.id)
-    #   return unless log
+      log = Log.find_by(id:id, contact_id:current_user.id)
+      return unless log
 
-    #   card = Card.find_by(id:card_id, user_id:current_user.id)
-    #   return unless card
+      card = Card.find_by(id:card_id, user_id:current_user.id)
+      return unless card
 
-    #   if log.update(card_id: card.id)
-    #       log
-    #   end
-    # end
+      if log.update(card_id: card.id)
+          log
+      end
+    end
+
+    field :destroyConnection, Types::NullType, null: true do
+      argument :token, String, required: true
+      argument :id, ID, required: true    
+    end
 
     # def destroy_log
-    #   current_user = AuthorizeUserRequest.call(token).result
-    #   return unless current_user
+      current_user = AuthorizeUserRequest.call(token).result
+      return unless current_user
 
-    #   log = Log.find_by(id:id, contact_id:current_user.id)
-    #   return unless log
+      log = Log.find_by(id:id, contact_id:current_user.id)
+      return unless log
 
-    #   card = Card.find_by(id:card_id, user_id:current_user.id)
-    #   return unless card
+      card = Card.find_by(id:card_id, user_id:current_user.id)
+      return unless card
 
-    #   if log.destroy(card_id: card.id)
-    #       log
-    #   end
-    # end
+      if log.destroy
+        OpenStruct.new({
+          message: "This log has been deleted"
+        })
+      else
+        OpenStruct.new({
+          message: log.errors.full_message
+        })
+      end
+    end
     
   end
 end
