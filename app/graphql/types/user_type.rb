@@ -3,12 +3,12 @@ module Types
     field :id, ID, null: false
     field :username, String, null: false
     field :name, String, null: false do
-      argument :user_token, String, required: true
+      argument :token, String, required: true
     end
 
 
-    def name(user_token:)
-      current_user = AuthorizeUserRequest.call(user_token).result
+    def name(token:)
+      current_user = AuthorizeUserRequest.call(token).result
       return object.name if current_user.id == object.id
 
       connections = Connection.where(contact_id: object.id, user_id: current_user.id)

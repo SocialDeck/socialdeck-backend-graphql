@@ -1,6 +1,21 @@
 module Types
   class MutationType < Types::BaseObject
 
+    field :login, Types::TokenType, null: true do
+      argument :user, Types::AuthProviderUsernameInput, required: true
+    end
+
+    def login(user:)
+      credential_user = User.find_by_username(user[:username])
+      if credential_user && credential_user.authenticate(user[:password])
+        exp = user[:remember] ? 1.month.from_now : 2.hours.from_now
+        OpenStruct.new({
+          token: JsonWebToken.encode(user_id: credential_user.id, exp: exp),
+          user: credential_user
+        })
+      end
+    end    
+
     # User Mutations
 
     field :createUser, Types::TokenType, null: false do
@@ -12,7 +27,7 @@ module Types
     def create_user(user:, name:, email:)
       user = User.create!(
           email: email,
-          number: number,
+          name: name,
           username: user[:username],
           password: user[:password]
         )
@@ -33,10 +48,10 @@ module Types
       argument :email, String, required: false
    end
 
-    def update_user(token:, username:nil, password:nil, email:nil, number:nil)
+    def update_user(token:, username:nil, password:nil, name:nil, email:nil)
       current_user = AuthorizeUserRequest.call(token).result
       user_params = {email: email,
-                     number: number,
+                     name: name,
                      username: username,
                      password: password}.compact
 
@@ -249,7 +264,7 @@ module Types
 
     field :createConnection, Types::LinkType, null: true do
       argument :token, String, required: true
-      argument :card_id, ID, required: true
+      argument :card_token, ID, required: true
     end
 
     def create_connection(token:, card_token:)
