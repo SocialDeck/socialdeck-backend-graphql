@@ -10,10 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_10_01_135555) do
+ActiveRecord::Schema.define(version: 2018_10_08_210241) do
 
   # These are extensions that must be enabled in order to support this database
+  enable_extension "fuzzystrmatch"
+  enable_extension "pg_trgm"
   enable_extension "plpgsql"
+  enable_extension "unaccent"
 
   create_table "addresses", force: :cascade do |t|
     t.string "address1"
@@ -28,9 +31,9 @@ ActiveRecord::Schema.define(version: 2018_10_01_135555) do
   create_table "cards", force: :cascade do |t|
     t.bigint "user_id"
     t.bigint "author_id"
-    t.string "name"
+    t.string "card_name"
     t.string "display_name"
-    t.string "person_name"
+    t.string "name"
     t.string "business_name"
     t.bigint "address_id"
     t.string "number"
@@ -75,8 +78,9 @@ ActiveRecord::Schema.define(version: 2018_10_01_135555) do
     t.string "username"
     t.string "password_digest"
     t.string "token"
+    t.string "name"
     t.string "email"
-    t.string "number"
+    t.boolean "confirmed", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["token"], name: "index_users_on_token", unique: true

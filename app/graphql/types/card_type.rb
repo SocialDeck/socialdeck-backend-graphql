@@ -3,9 +3,9 @@ module Types
     field :id, ID, null: false
     field :user, Types::UserType, null: true
     field :author, Types::UserType, null: false
-    field :name, String, null: false
+    field :card_name, String, null: false
     field :display_name, String, null: false
-    field :person_name, String, null: false
+    field :name, String, null: false
     field :business_name, String, null: true
     field :address, Types::AddressType, null: true
     field :number, String, null: true
@@ -16,9 +16,17 @@ module Types
     field :facebook, String, null: true
     field :instagram, String, null: true
     field :verified, Boolean, null: false
+    field :token, String, null: false do
+      argument :user_token, String, required: true
+    end
 
     def verified
       !!object.user_id
     end
+
+    def token(user_token:)
+      current_user = AuthorizeUserRequest.call(user_token).result
+      AuthenticateCard.call(current_user.id, object.id).result
+    end    
   end
 end
