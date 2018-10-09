@@ -4,13 +4,13 @@
     <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
   </head>
   <body>
-    <p>Hello <%= @user.username %>!</p>
+    <p>Hello <%= @user.name %>!</p>
 
     <p>You made an update to a connection!</p>
 
     <p>To view your connection updates visit:</p>
 
-    <p><%= link_to 'View Account', 'socialdeck.xyz/myaccount/connections' %></p>
+    <p><%= link_to 'View Account', "socialdeck.xyz/myaccount/connections/update/#{@token}" %></p>
 
     
 
