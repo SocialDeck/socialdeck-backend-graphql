@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  </head>
+  <body>
+    <p>Hello <%= @user.username %>!</p>
+
+    <p>Please click the following link to see what updates were made on your account:</p>
+
+    <p><%= link_to 'Confirm my updates', 'socialdeck.xyz/updates/token' %></p>
+
+    <%= yield %>
+  </body>
+</html>

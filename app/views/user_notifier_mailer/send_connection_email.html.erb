@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  </head>
+  <body>
+    <p>Hello <%= @user.username %>!</p>
+
+    <p>You made a new connection!</p>
+
+    <p>To view your connections visit:</p>
+
+    <p><%= link_to 'View Account', 'socialdeck.xyz/myaccount/conections' %></p>
+
+    
+
+    <%= yield %>
+  </body>
+</html>
