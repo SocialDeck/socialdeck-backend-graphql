@@ -1,5 +1,5 @@
 class UserNotifierMailer < ApplicationMailer
-    default :from => 'info@socialdeck.com'
+    default :from => 'info@socialdeck.xyz'
   
     # send a signup email to the user, pass in the user object that contains the user's email address
     def send_signup_email(user, token)
