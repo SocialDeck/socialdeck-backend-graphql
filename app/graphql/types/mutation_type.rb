@@ -1,6 +1,21 @@
 module Types
   class MutationType < Types::BaseObject
 
+    field :login, Types::TokenType, null: true do
+      argument :user, Types::AuthProviderUsernameInput, required: true
+    end
+
+    def login(user:)
+      credential_user = User.find_by_username(user[:username])
+      if credential_user && credential_user.authenticate(user[:password])
+        exp = user[:remember] ? 1.month.from_now : 2.hours.from_now
+        OpenStruct.new({
+          token: JsonWebToken.encode(user_id: credential_user.id, exp: exp),
+          user: credential_user
+        })
+      end
+    end    
+
     # User Mutations
 
     field :createUser, Types::TokenType, null: false do
