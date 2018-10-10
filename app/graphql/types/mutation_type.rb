@@ -34,7 +34,7 @@ module Types
 
       if user.save
         token = JsonWebToken.encode(user_id: user.id, exp: 48.hours.from_now)
-        UserNotifierMailer.send_signup_email(user, token).deliver
+        # UserNotifierMailer.send_signup_email(user, token).deliver
         OpenStruct.new({
           token: JsonWebToken.encode(user_id: user.id),
           user: user
@@ -70,7 +70,7 @@ module Types
                      password: password}.compact
 
       if user.update(user_params)
-        UserNotifierMailer.send_update_email(user).deliver
+        # UserNotifierMailer.send_update_email(user).deliver
         user
       end
     end
@@ -82,7 +82,7 @@ module Types
     def reset_password(username:)
       user = User.find_by_username(username)
       token = JsonWebToken.encode(user_id: user.id, exp: 3.hours.from_now)
-      UserNotifierMailer.send_reset_password_email(user, token).deliver
+      # UserNotifierMailer.send_reset_password_email(user, token).deliver
 
       OpenStruct.new({
         message: "Message sent"
@@ -297,7 +297,7 @@ module Types
             contact_id: card.user_id,
             card_id: card.id
           )
-          UserNotifierMailer.send_connection_email(user).deliver
+          # UserNotifierMailer.send_connection_email(user).deliver
       end
       connection
     end
@@ -344,7 +344,7 @@ module Types
           message: connection.errors.full_message
         })
       end
-      UserNotifierMailer.send_connection_update_email(user).deliver
+      # UserNotifierMailer.send_connection_update_email(user).deliver
     end
 
     # Log Mutations

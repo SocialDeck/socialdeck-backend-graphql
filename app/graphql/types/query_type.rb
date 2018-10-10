@@ -52,7 +52,7 @@ module Types
       user = AuthorizeUserRequest.call(token).result
       card = Card.find_by(user_id: current_user.id, id: id)
       card_token = AuthenticateCard.call(user.id, card.id).result
-      UserNotifierMailer.send_card_email(user, card, card_token, email).deliver
+      # UserNotifierMailer.send_card_email(user, card, card_token, email).deliver
     end 
 
     field :authored_cards, [Types::CardType], null: true do
