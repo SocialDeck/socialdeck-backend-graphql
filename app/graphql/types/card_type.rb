@@ -16,6 +16,7 @@ module Types
     field :facebook, String, null: true
     field :instagram, String, null: true
     field :verified, Boolean, null: false
+    field :mobile, Boolean, null: false
     field :card_token, String, null: false do
       argument :token, String, required: true
     end
@@ -28,5 +29,9 @@ module Types
       current_user = AuthorizeUserRequest.call(token).result
       AuthenticateCard.call(current_user.id, object.id).result
     end    
+
+    def mobile
+      TelephoneNumber.parse(obj.number, :us).valid_types.include?(:mobile)
+    end
   end
 end

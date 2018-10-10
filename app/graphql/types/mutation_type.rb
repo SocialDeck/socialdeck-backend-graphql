@@ -289,17 +289,17 @@ module Types
     end
 
     def create_connection(token:, card_token:)
-      current_user = AuthorizeUserRequest.call(token).result
+      user = AuthorizeUserRequest.call(token).result
       card = AuthorizedCardRequest.call(card_token).result
       if card
-          Connection.create!(
+          connection = Connection.create!(
             user_id: current_user.id,
             contact_id: card.user_id,
             card_id: card.id
           )
+          UserNotifierMailer.send_connection_email(user).deliver
       end
-      UserNotifierMailer.send_connection_email(user).deliver
-
+      connection
     end
 
     field :updateConnection, Types::LinkType, null: true do
