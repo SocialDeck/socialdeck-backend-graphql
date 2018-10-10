@@ -293,7 +293,7 @@ module Types
       card = AuthorizedCardRequest.call(card_token).result
       if card
           connection = Connection.create!(
-            user_id: current_user.id,
+            user_id: user.id,
             contact_id: card.user_id,
             card_id: card.id
           )
@@ -309,13 +309,13 @@ module Types
     end
 
     def update_connection(token:, id:, card_id:)
-      current_user = AuthorizeUserRequest.call(token).result
-      return unless current_user
+      user = AuthorizeUserRequest.call(token).result
+      return unless user
 
-      connection = Connection.find_by(id:id, contact_id:current_user.id)
+      connection = Connection.find_by(id:id, contact_id:user.id)
       return unless connection
 
-      card = Card.find_by(id:card_id, user_id:current_user.id)
+      card = Card.find_by(id:card_id, user_id:user.id)
       return unless card
 
       if connection.update(card_id: card.id)
@@ -329,10 +329,10 @@ module Types
     end
 
     def destroy_connection(token:, id:)
-      current_user = AuthorizeUserRequest.call(token).result
-      return unless current_user
+      user = AuthorizeUserRequest.call(token).result
+      return unless user
 
-      connection = Connection.find_by(id:id, contact_id:current_user.id) || Connection.find_by(id:id, user_id:current_user.id)
+      connection = Connection.find_by(id:id, contact_id:user.id) || Connection.find_by(id:id, user_id:user.id)
       return unless connection
 
       if connection.destroy
