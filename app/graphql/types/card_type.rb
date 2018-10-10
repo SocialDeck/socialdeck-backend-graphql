@@ -31,7 +31,7 @@ module Types
     end    
 
     def mobile
-      TelephoneNumber.parse(obj.number, :us).valid_types.include?(:mobile)
+      TelephoneNumber.parse(object.number, :us).valid_types.include?(:mobile)
     end
   end
 end

@@ -54,6 +54,7 @@ ActiveRecord::Schema.define(version: 2018_10_08_210241) do
     t.bigint "user_id"
     t.bigint "contact_id"
     t.bigint "card_id"
+    t.boolean "favorite", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["card_id"], name: "index_connections_on_card_id"
