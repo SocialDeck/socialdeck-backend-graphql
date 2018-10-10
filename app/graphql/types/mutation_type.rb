@@ -323,6 +323,41 @@ module Types
       end
     end
 
+    field :favorite, Types::LinkType, null: true do
+      argument :token, String, required: true
+      argument :id, ID, required: true
+    end
+
+    def favorite(token:, id:)
+      user = AuthorizeUserRequest.call(token).result
+      return unless user
+
+      connection = Connection.find_by(id:id, user_id:user.id)
+      return unless connection
+
+      if connection.update(favorite: true)
+          connection
+      end
+    end
+
+
+    field :unfavorite, Types::LinkType, null: true do
+      argument :token, String, required: true
+      argument :id, ID, required: true
+    end
+
+    def unfavorite(token:, id:)
+      user = AuthorizeUserRequest.call(token).result
+      return unless user
+
+      connection = Connection.find_by(id:id, user_id:user.id)
+      return unless connection
+
+      if connection.update(favorite: false)
+          connection
+      end
+    end
+
     field :destroyConnection, Types::NullType, null: true do
       argument :token, String, required: true
       argument :id, ID, required: true    
@@ -349,64 +384,78 @@ module Types
 
     # Log Mutations
 
-    # field :createLog, Types::LogType, null: false do
-    #   argument :user, Types::UserType, required: true
-    #   argument :contact, Types::UserType, required: false
-    #   argument :card, Types::CardType, required: true
-    #   argument :date, String, required: false
-    #   argument :text, String, required: true
-    # end
+    field :createLog, Types::LogType, null: true do
+      argument :token, String, required: true
+      argument :card_id, ID, required: true
+      argument :date, Types::DateTimeType, required: false
+      argument :text, String, required: true
+    end
 
-    # field :updateLog, Types::LogType, null: false do
-    #   argument :user, Types::UserType, required: true
-    #   argument :contact, Types::UserType, required: false
-    #   argument :card, Types::CardType, required: true
-    #   argument :date, String, required: false
-    #   argument :text, String, required: false
-    # end
+    def create_log(token:, card_id:, date:Time.now.to_date, text:)
+      user = AuthorizeUserRequest.call(token).result
+      return unless user
+      print User
 
-    # def create_log(token:, card_id:)
-    #   current_user = AuthorizeUserRequest.call(token).result
-    #   log = Log.find(log_id)
-    #   print log.user_id
-    #   if log
-    #       Log.create!(
-    #         user_id: current_user.id,
-    #         contact_id: card.user_id,
-    #         card_id: card.id
-    #       )
-    #   end
-    # end
+      connection = Connection.find_by(user_id:user.id, card_id: card_id)
+      return unless connection
 
-    # def update_log(token:, card_id:)
-    #   current_user = AuthorizeUserRequest.call(token).result
-    #   return unless current_user
+      card = Card.find_by(id:card_id)
+      return unless card
 
-    #   log = Log.find_by(id:id, contact_id:current_user.id)
-    #   return unless log
+      print connection
 
-    #   card = Card.find_by(id:card_id, user_id:current_user.id)
-    #   return unless card
+      Log.create!(
+        user_id: user.id,
+        contact_id: card.user_id,
+        card_id: card_id,
+        date: date, 
+        text: text
+      )
+    end
 
-    #   if log.update(card_id: card.id)
-    #       log
-    #   end
-    # end
+    field :updateLog, Types::LogType, null: true do
+      argument :token, String, required: true
+      argument :id, ID, required: true
+      argument :date, Types::DateTimeType, required: false
+      argument :text, String, required: false
+    end
 
-    # def destroy_log
-    #   current_user = AuthorizeUserRequest.call(token).result
-    #   return unless current_user
+    def update_log(token:, id:, date:nil, text:nil)
+      user = AuthorizeUserRequest.call(token).result
+      return unless user
 
-    #   log = Log.find_by(id:id, contact_id:current_user.id)
-    #   return unless log
+      log = Log.find_by(id:id, user_id:user.id)
+      return unless log
 
-    #   card = Card.find_by(id:card_id, user_id:current_user.id)
-    #   return unless card
+      log_params = {date: date,
+                    text: text}.compact
 
-    #   if log.destroy(card_id: card.id)
-    #       log
-    #   end
-    # end
-    
+      if log.update(log_params)
+          log
+      end
+    end
+
+    field :destroyLog, Types::NullType, null: false do
+      argument :token, String, required: true
+      argument :id, ID, required: true
+    end    
+
+    def destroy_log
+      user = AuthorizeUserRequest.call(token).result
+      return unless user
+
+      log = Log.find_by(id:id, user_id:user.id)
+      return unless log
+
+      if log.destroy
+        OpenStruct.new({
+          message: "This log has been deleted"
+        })
+      else
+        OpenStruct.new({
+          message: log.errors.full_message
+        })
+      end
+    end
   end
 end

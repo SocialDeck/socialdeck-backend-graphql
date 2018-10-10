@@ -1,6 +1,7 @@
 #  SocialDeck GraphQL API Schema
-
-## Queries
+****
+# Queries
+### Users:
 **List of all contacts**
 
 ```graphql
@@ -52,61 +53,19 @@
   }
 }
 ```
-
-**List of all logs associated with a card**
+**List of blocked users**
 
 ```graphql
 {
-  logs(token:String!, cardId:ID!) {
+  blockedUsers(token:String!) {
     id
-    user {
-      id
-      username
-      name
-    }
-    contact {
-      id
-      username
-      name
-    }
-    card {
-      id
-      user {
-        id
-        username
-        name
-      }
-      author {
-        id
-        username
-        name
-      }
-      name
-      displayName
-      personName
-      businessName
-      address {
-        address1
-        address2
-        city
-        state
-        postalCode
-      }
-      number
-      email
-      birthDate
-      twitter
-      linkedIn
-      facebook
-      instagram
-      verified
-    }
-    date
-    text
+    username
+    email
+    number
   }
 }
 ```
-
+### Cards:
 **Get a specific card that is owned, authored, or connected**
 
 ```graphql
@@ -219,18 +178,61 @@
   }
 }
 ```
-**List of blocked users**
+
+**List of all logs associated with a card**
 
 ```graphql
 {
-  blockedUsers(token:String!) {
+  logs(token:String!, cardId:ID!) {
     id
-    username
-    email
-    number
+    user {
+      id
+      username
+      name
+    }
+    contact {
+      id
+      username
+      name
+    }
+    card {
+      id
+      user {
+        id
+        username
+        name
+      }
+      author {
+        id
+        username
+        name
+      }
+      name
+      displayName
+      personName
+      businessName
+      address {
+        address1
+        address2
+        city
+        state
+        postalCode
+      }
+      number
+      email
+      birthDate
+      twitter
+      linkedIn
+      facebook
+      instagram
+      verified
+    }
+    date
+    text
   }
 }
 ```
+
 
 ---
 
@@ -278,6 +280,15 @@ mutation {
   }
 }
 ```
+
+**Delete User**
+```
+mutation {
+  destroyUser(token:String!){
+    message
+  }
+}
+```
 **Block User**
 ```graphql
 mutation {
@@ -300,14 +311,6 @@ mutation {
 }
 ```
 
-**Delete User**
-```
-mutation {
-  destroyUser(token:String!){
-    message
-  }
-}
-```
 **Create New Card**
 
 *Note: If an orphaned card, will automatically create a connection as well. Will validate email and number.*
@@ -507,6 +510,31 @@ mutation {
 mutation {
   destroyConnection(token: String!, id: ID!){
     message
+  }
+}
+```
+
+**Create Log**
+```
+mutation {
+  createLog(token: String!, id: ID!, date: String!, text: String!) {
+    id
+  }
+}
+```
+**Update Log**
+```
+mutation {
+  updateLog(token: String!, id: ID!, date: String!, text: String!) {
+    id
+  }
+}
+```
+**Delete Log**
+```
+mutation {
+  updateLog(token: String!, id: ID!) {
+    id
   }
 }
 ```

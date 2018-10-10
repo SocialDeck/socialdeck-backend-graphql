@@ -4,5 +4,6 @@ module Types
     field :user, Types::UserType, null: false
     field :contact, Types::UserType, null: true
     field :card, Types::CardType, null: false
+    field :favorite, Boolean, null: false
   end
 end

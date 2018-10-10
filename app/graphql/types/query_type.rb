@@ -30,18 +30,6 @@ module Types
       card = AuthorizedCardRequest.call(card_token).result
     end    
 
-    field :share_card, String, null: true do
-      argument :token, String, required: true
-      argument :id, ID, required: true
-    end
-
-    def share_card(token:, id:)
-      user = AuthorizeUserRequest.call(token).result
-      card = Card.find_by(user_id: user.id, id: id)
-      card_token = AuthenticateCard.call(user.id, card.id).result
-      RQRCode::QRCode.new("https://socialdeck-3c370.firebaseapp.com/contacts/#{card_token}").as_svg
-    end 
-
     field :share_card_by_email, String, null: true do
       argument :token, String, required: true
       argument :id, ID, required: true
@@ -81,10 +69,19 @@ module Types
     def contacts(token:, search:nil)
       current_user = AuthorizeUserRequest.call(token).result
       if search
-        Card.where(id: Connection.where(user_id: current_user.id).pluck(:card_id)).where.not(id: -1).search(search)
+        Card.where(id: Connection.where(user_id: current_user.id).pluck(:card_id)).where.not(id: -1).order(:name).search(search)
       else
-        Card.where(id: Connection.where(user_id: current_user.id).pluck(:card_id)).where.not(id: -1)
+        Card.where(id: Connection.where(user_id: current_user.id).pluck(:card_id)).where.not(id: -1).order(:name)
       end
+    end
+
+    field :favorites, [Types::CardType], null: true do
+      argument :token, String, required: true
+    end
+
+    def favorites(token:)
+      user = AuthorizeUserRequest.call(token).result
+      Card.where(id: Connection.where(user: current_user.id, favorite:true).pluck(:card_id)).where.not(id: -1).order(:name)
     end
 
     # Connection Queries
