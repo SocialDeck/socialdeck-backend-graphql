@@ -325,14 +325,14 @@ module Types
 
     field :favorite, Types::LinkType, null: true do
       argument :token, String, required: true
-      argument :id, ID, required: true
+      argument :card_id, ID, required: true
     end
 
-    def favorite(token:, id:)
+    def favorite(token:, card_id:)
       user = AuthorizeUserRequest.call(token).result
       return unless user
 
-      connection = Connection.find_by(id:id, user_id:user.id)
+      connection = Connection.find_by(card_id:card_id, user_id:user.id)
       return unless connection
 
       if connection.update(favorite: true)
@@ -343,14 +343,14 @@ module Types
 
     field :unfavorite, Types::LinkType, null: true do
       argument :token, String, required: true
-      argument :id, ID, required: true
+      argument :card_id, ID, required: true
     end
 
-    def unfavorite(token:, id:)
+    def unfavorite(token:, card_id:)
       user = AuthorizeUserRequest.call(token).result
       return unless user
 
-      connection = Connection.find_by(id:id, user_id:user.id)
+      connection = Connection.find_by(card_id:card_id, user_id:user.id)
       return unless connection
 
       if connection.update(favorite: false)
