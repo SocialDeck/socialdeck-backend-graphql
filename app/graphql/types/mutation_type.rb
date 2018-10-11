@@ -78,6 +78,7 @@ module Types
           user
         else
           puts user.errors
+        end
       end
     end
 
