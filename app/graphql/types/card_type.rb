@@ -33,7 +33,9 @@ module Types
       AuthenticateCard.call(user.id, object.id).result
     end    
 
-    def favorite(token:)
+    def favorite(token:nil)
+      return false unless token
+      
       user = AuthorizeUserRequest.call(token).result
       connection = Connection.find_by(user_id:user.id, card_id:object.id)
       return false unless connection
