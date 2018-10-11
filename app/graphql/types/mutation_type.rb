@@ -97,14 +97,14 @@ module Types
     end
 
     def block_user(token:, user_id:)
-      current_user = AuthorizeUserRequest.call(token).result
+      user = AuthorizeUserRequest.call(token).result
 
-      connections = Connection.where(user_id:current_user.id, contact_id:user_id)
+      connections = Connection.where(user_id:user.id, contact_id:user_id)
       connections.destroy_all
 
       Connection.create!(
             user_id: user_id,
-            contact_id: current_user.id,
+            contact_id: user.id,
             card_id: -1
           )
 
@@ -115,16 +115,16 @@ module Types
     end
 
     def destroy_user(token:)
-      current_user = AuthorizeUserRequest.call(token).result
-      return unless current_user
+      user = AuthorizeUserRequest.call(token).result
+      return unless user
 
-      if current_user.destroy
+      if user.destroy
         OpenStruct.new({
           message: "This user has been deleted"
         })
       else
         OpenStruct.new({
-          message: current_user.errors.full_message
+          message: user.errors.full_message
         })
       end
     end
@@ -152,7 +152,7 @@ module Types
     def create_card(token:, owned:true, card_name:, display_name:nil, name:, 
                     business_name:nil, number:nil, email:nil, address:nil, birth_date:nil,
                     twitter:nil, facebook:nil, linked_in:nil, instagram:nil)
-      current_user = AuthorizeUserRequest.call(token).result
+      user = AuthorizeUserRequest.call(token).result
       if address
         address_object = Address.find_by(address.to_h)
         unless address_object
@@ -177,8 +177,8 @@ module Types
           number: number,
           email: email,
           address_id: address_id,
-          author_id: current_user.id,
-          user_id: owned ? current_user.id : nil,
+          author_id: user.id,
+          user_id: owned ? user.id : nil,
           birth_date: birth_date,
           twitter: twitter,
           linked_in: linked_in,
@@ -188,7 +188,7 @@ module Types
 
       if not owned
           Connection.create!(
-            user_id: current_user.id,
+            user_id: user.id,
             contact_id: nil,
             card_id: card.id
           )
@@ -217,11 +217,11 @@ module Types
     def update_card(token:, id:, card_name:nil, display_name:nil, name:nil, 
                     business_name:nil, number:nil, email:nil, address:nil, birth_date:nil,
                     twitter:nil, facebook:nil, linked_in:nil, instagram:nil)
-      current_user = AuthorizeUserRequest.call(token).result
-      card = Card.find_by(id: id, author_id:current_user.id)
+      user = AuthorizeUserRequest.call(token).result
+      card = Card.find_by(id: id, author_id:user.id)
       return unless card
 
-      if address
+      if address.address1
         card_address = card.address
 
         address_params = {address1: address.address1 || card_address.address1,
@@ -264,10 +264,10 @@ module Types
     end
 
     def destroy_card(token:, id:)
-      current_user = AuthorizeUserRequest.call(token).result
-      return unless current_user
+      user = AuthorizeUserRequest.call(token).result
+      return unless user
 
-      card = Card.find_by(id: id, author_id:current_user.id)
+      card = Card.find_by(id: id, author_id:user.id)
       return unless card
 
       if card.destroy
