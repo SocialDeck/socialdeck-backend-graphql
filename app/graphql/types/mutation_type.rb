@@ -63,7 +63,7 @@ module Types
       argument :email, String, required: false
    end
 
-    def update_user(token:, username:nil, old_password: new_password:nil, name:nil, email:nil)
+    def update_user(token:, username:nil, old_password:, new_password:nil, name:nil, email:nil)
       user = AuthorizeUserRequest.call(token).result
       if user && user.authenticate(old_password)
         user_params = {email: email,
