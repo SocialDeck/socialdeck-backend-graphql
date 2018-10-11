@@ -54,24 +54,27 @@ module Types
     end
 
 
-    field :updateUser, Types::UserType, null: false do
+    field :updateUser, Types::UserType, null: true do
       argument :token, String, required: true
       argument :username, String, required: false
       argument :name, String, required: false
-      argument :password, String, required: false
+      argument :old_password, String, required:true
+      argument :new_password, String, required: false
       argument :email, String, required: false
    end
 
-    def update_user(token:, username:nil, password:nil, name:nil, email:nil)
+    def update_user(token:, username:nil, old_password: new_password:nil, name:nil, email:nil)
       user = AuthorizeUserRequest.call(token).result
-      user_params = {email: email,
-                     name: name,
-                     username: username,
-                     password: password}.compact
+      if user && user.authenticate(old_password)
+        user_params = {email: email,
+                      name: name,
+                      username: username,
+                      password: new_password}.compact
 
-      if user.update(user_params)
-        # UserNotifierMailer.send_update_email(user).deliver
-        user
+        if user.update(user_params)
+          # UserNotifierMailer.send_update_email(user).deliver
+          user
+        end
       end
     end
 
