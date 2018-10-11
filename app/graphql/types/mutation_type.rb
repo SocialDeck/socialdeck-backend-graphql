@@ -65,19 +65,15 @@ module Types
 
     def update_user(token:, username:nil, old_password:, new_password:nil, name:nil, email:nil)
       user = AuthorizeUserRequest.call(token).result
-      auth = user.authenticate(old_password)
-      puts user.id, auth.id
       if user && user.authenticate(old_password)
-        user_params = {email: email,
-                      name: name,
-                      username: username,
-                      password: new_password}.compact
-        puts user_params
+        user_params = {email: email == "" || email.nil? ? nil : email,
+                       name: name == "" || name.nil? ? nil : name,
+                       username: username == "" || username.nil? ? nil : username,
+                       password: new_password == "" || new_password.nil? ? nil : new_password}.compact
+
         if user.update(user_params)
           # UserNotifierMailer.send_update_email(user).deliver
           user
-        else
-          puts user.errors
         end
       end
     end
