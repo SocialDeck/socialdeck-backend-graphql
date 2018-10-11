@@ -20,15 +20,24 @@ module Types
     field :card_token, String, null: false do
       argument :token, String, required: true
     end
+    field :favorite, Boolean, null: false do
+      argument :token, String, required: true
+    end    
 
     def verified
       !!object.user_id
     end
 
     def card_token(token:)
-      current_user = AuthorizeUserRequest.call(token).result
-      AuthenticateCard.call(current_user.id, object.id).result
+      user = AuthorizeUserRequest.call(token).result
+      AuthenticateCard.call(user.id, object.id).result
     end    
+
+    def favorite(token:)
+      user = AuthorizeUserRequest.call(token).result
+      connection = Connection.find_by(user_id:user.id, card_id:object.id)
+      connection.favorite
+    end  
 
     def mobile
       TelephoneNumber.parse(object.number, :us).valid_types.include?(:mobile)
