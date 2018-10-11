@@ -21,7 +21,7 @@ module Types
       argument :token, String, required: true
     end
     field :favorite, Boolean, null: false do
-      argument :token, String, required: true
+      argument :token, String, required: false
     end    
 
     def verified
@@ -36,7 +36,7 @@ module Types
     def favorite(token:)
       user = AuthorizeUserRequest.call(token).result
       connection = Connection.find_by(user_id:user.id, card_id:object.id)
-      connection.favorite
+      connection.favorite || false
     end  
 
     def mobile
