@@ -99,7 +99,7 @@ module Types
     def block_user(token:, user_id:)
       user = AuthorizeUserRequest.call(token).result
 
-      connections = Connection.where(user_id:user.id, contact_id:user_id)
+      connections = Connection.where(user_id:user_id, contact_id:user.id)
       connections.destroy_all
 
       Connection.create!(

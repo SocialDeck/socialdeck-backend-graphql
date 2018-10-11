@@ -11,7 +11,7 @@ module Types
       current_user = AuthorizeUserRequest.call(token).result
       return object.name if current_user.id == object.id
 
-      connections = Connection.where(contact_id: object.id, user_id: current_user.id)
+      connections = Connection.where(contact_id: object.id, user_id: current_user.id).where.not(card_id: -1)
       name_field = ''
       connections.each do |connection|
         name_field = connection.card.name ? connection.card.name : name_field
