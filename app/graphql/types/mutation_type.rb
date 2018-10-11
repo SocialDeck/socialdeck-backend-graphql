@@ -291,6 +291,10 @@ module Types
     def create_connection(token:, card_token:)
       user = AuthorizeUserRequest.call(token).result
       card = AuthorizedCardRequest.call(card_token).result
+
+      connection = Connection.find_by(card_id:card.id, user_id:user.id)
+      return if connection
+      
       if card
           connection = Connection.create!(
             user_id: user.id,

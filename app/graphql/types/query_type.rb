@@ -86,11 +86,11 @@ module Types
 
     # Connection Queries
 
-    field :subscibers, [Types::LinkType], null: true do
+    field :subscribers, [Types::LinkType], null: true do
       argument :token, String, required: true
     end
 
-    def subscibers(token:)
+    def subscribers(token:)
       current_user = AuthorizeUserRequest.call(token).result
       Connection.where(contact_id: current_user.id).where.not(card_id: -1)
     end
