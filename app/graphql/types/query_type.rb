@@ -16,8 +16,8 @@ module Types
     end
 
     def blocked_users(token:)
-      current_user = AuthorizeUserRequest.call(token).result
-      User.where(id: Connection.where(card_id: -1, contact_id: current_user.id).pluck(:user_id))
+      user = AuthorizeUserRequest.call(token).result
+      User.where(id: Connection.where(card_id: -1, contact_id: user.id).pluck(:user_id))
     end
 
     # Card Queries
@@ -38,7 +38,7 @@ module Types
 
     def share_card_by_email(token:, id:, email:)
       user = AuthorizeUserRequest.call(token).result
-      card = Card.find_by(user_id: current_user.id, id: id)
+      card = Card.find_by(user_id: user.id, id: id)
       card_token = AuthenticateCard.call(user.id, card.id).result
       # UserNotifierMailer.send_card_email(user, card, card_token, email).deliver
     end 
@@ -48,8 +48,8 @@ module Types
     end
 
     def authored_cards(token:)
-      current_user = AuthorizeUserRequest.call(token).result
-      Card.where(author_id: current_user.id, user_id: nil)
+      user = AuthorizeUserRequest.call(token).result
+      Card.where(author_id: user.id, user_id: nil)
     end     
 
     field :owned_cards, [Types::CardType], null: true do
@@ -57,8 +57,8 @@ module Types
     end
 
     def owned_cards(token:)
-      current_user = AuthorizeUserRequest.call(token).result
-      Card.where(user_id: current_user.id)
+      user = AuthorizeUserRequest.call(token).result
+      Card.where(user_id: user.id)
     end
 
     field :contacts, [Types::CardType], null: true do
@@ -67,11 +67,11 @@ module Types
     end
 
     def contacts(token:, search:nil)
-      current_user = AuthorizeUserRequest.call(token).result
+      user = AuthorizeUserRequest.call(token).result
       if search
-        Card.where(id: Connection.where(user_id: current_user.id).pluck(:card_id)).where.not(id: -1).order(:name).search(search)
+        Card.where(id: Connection.where(user_id: user.id).pluck(:card_id)).where.not(id: -1).order(:name).search(search)
       else
-        Card.where(id: Connection.where(user_id: current_user.id).pluck(:card_id)).where.not(id: -1).order(:name)
+        Card.where(id: Connection.where(user_id: user.id).pluck(:card_id)).where.not(id: -1).order(:name)
       end
     end
 
@@ -81,7 +81,7 @@ module Types
 
     def favorites(token:)
       user = AuthorizeUserRequest.call(token).result
-      Card.where(id: Connection.where(user: current_user.id, favorite:true).pluck(:card_id)).where.not(id: -1).order(:name)
+      Card.where(id: Connection.where(user: user.id, favorite:true).pluck(:card_id)).where.not(id: -1).order(:name)
     end
 
     # Connection Queries
@@ -91,8 +91,8 @@ module Types
     end
 
     def subscribers(token:)
-      current_user = AuthorizeUserRequest.call(token).result
-      Connection.where(contact_id: current_user.id).where.not(card_id: -1)
+      user = AuthorizeUserRequest.call(token).result
+      Connection.where(contact_id: user.id).where.not(card_id: -1).left_outer_joins(:user).order('"users"."name"')
     end
 
     # field :logs, [Types::LogType], null: true do
@@ -101,8 +101,8 @@ module Types
     # end
 
     # def logs(card_id:, token:)
-    #   current_user = AuthorizeUserRequest.call(token).result
-    #   Log.where(card_id: card_id, user_id: current_user.id)
+    #   user = AuthorizeUserRequest.call(token).result
+    #   Log.where(card_id: card_id, user_id: user.id)
     # end    
 
   end
