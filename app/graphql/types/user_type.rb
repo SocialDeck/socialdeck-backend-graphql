@@ -16,7 +16,7 @@ module Types
       connections.each do |connection|
         name_field = connection.card.name ? connection.card.name : name_field
       end
-      name_field ? name_field : object.name
+      name_field != '' ? name_field : object.name
     end 
 
 
