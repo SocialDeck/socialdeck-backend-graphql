@@ -174,7 +174,7 @@ module Types
       argument :display_name, String, required: false
       argument :name, String, required: true
       argument :business_name, String, required: false
-      argument :address, Types::AddressInput, required: false
+      argument :address, Types::AddressUpdateInput, required: false
       argument :number, String, required: false
       argument :email, String, required: false
       argument :birth_date, Types::DateTimeType, required: false
@@ -198,16 +198,13 @@ module Types
       end
 
       if address
-        address_object = Address.find_by(address.to_h)
-        unless address_object
-          address_object = Address.create!(
-            address1: address.address1,
-            address2: address.address2,
-            city: address.city,
-            state: address.state,
-            postal_code: address.postal_code
-          )
-        end
+        address_object = Address.create!(
+          address1: address.address1,
+          address2: address.address2,
+          city: address.city,
+          state: address.state,
+          postal_code: address.postal_code
+        )
         address_id = address_object.id
       else
         address_id = nil  
@@ -273,6 +270,7 @@ module Types
       card = Card.find_by(id: id, author_id:user.id)
       raise GraphQL::ExecutionError, "Card does not exist" unless card
 
+
       if address.present?
         if card.address.present?
           address_params = {address1: address.address1.present? ? address.address1 : card.address.address1,
@@ -286,7 +284,8 @@ module Types
             card.update(address_id: nil)
             address_id = nil
           else
-            address_id = address_object.id
+            card.address.update(address_params)
+            address_id = card.address.id
           end                                  
         else
           address_params = {address1: address.address1.present? ? address.address1 : nil,
@@ -295,11 +294,8 @@ module Types
                             state: address.state.present? ? address.state : nil, 
                             postal_code: address.postal_code.present? ? address.postal_code : nil}.compact 
 
-          address_object = Address.find_by(address_params)
-          unless address_object
-            address_object = Address.create!(address_params)
-          end 
-        
+
+          address_object = Address.create!(address_params)
           address_id = address_object.id
         end
       else
@@ -495,7 +491,6 @@ module Types
           message: connection.errors.full_message
         })
       end
-      # UserNotifierMailer.send_connection_update_email(user).deliver
     end
 
     # Log Mutations
