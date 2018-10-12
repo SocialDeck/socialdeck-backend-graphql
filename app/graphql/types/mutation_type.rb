@@ -7,12 +7,16 @@ module Types
 
     def login(user:)
       credential_user = User.find_by_username(user[:username])
-      if credential_user && credential_user.authenticate(user[:password])
+      raise GraphQL::ExecutionError, "User does not exist" unless credential_user
+
+      if credential_user.authenticate(user[:password])
         exp = user[:remember] ? 1.month.from_now : 2.hours.from_now
         OpenStruct.new({
           token: JsonWebToken.encode(user_id: credential_user.id, exp: exp),
           user: credential_user
         })
+      else
+        raise GraphQL::ExecutionError, "Invalid Password"        
       end
     end    
 
@@ -34,7 +38,7 @@ module Types
 
       if user.save
         token = JsonWebToken.encode(user_id: user.id, exp: 48.hours.from_now)
-        # UserNotifierMailer.send_signup_email(user, token).deliver
+        UserNotifierMailer.send_signup_email(user, token).deliver
         OpenStruct.new({
           token: JsonWebToken.encode(user_id: user.id),
           user: user
