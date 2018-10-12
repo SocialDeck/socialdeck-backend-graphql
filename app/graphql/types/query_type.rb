@@ -18,7 +18,7 @@ module Types
     def blocked_users(token:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -53,7 +53,7 @@ module Types
     def share_card_by_email(token:, id:, email:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -62,7 +62,7 @@ module Types
       
       card = Card.find_by(user_id: user.id, id: id)
       card_token = AuthenticateCard.call(user.id, card.id).result
-      # UserNotifierMailer.send_card_email(user, card, card_token, email).deliver
+      UserNotifierMailer.send_card_email(user, card, card_token, email).deliver
     end 
 
     field :authored_cards, [Types::CardType], null: true do
@@ -72,7 +72,7 @@ module Types
     def authored_cards(token:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -89,7 +89,7 @@ module Types
     def owned_cards(token:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -107,7 +107,7 @@ module Types
     def contacts(token:, search:nil)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -128,7 +128,7 @@ module Types
     def favorites(token:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -147,7 +147,7 @@ module Types
     def subscribers(token:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e

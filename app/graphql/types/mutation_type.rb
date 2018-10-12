@@ -49,7 +49,7 @@ module Types
     def confirm_user(token:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -74,7 +74,7 @@ module Types
     def update_user(token:, username:nil, old_password:, new_password:nil, name:nil, email:nil)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -82,10 +82,10 @@ module Types
       end
 
       if user && user.authenticate(old_password)
-        user_params = {email: email == "" || email.nil? ? nil : email,
-                       name: name == "" || name.nil? ? nil : name,
-                       username: username == "" || username.nil? ? nil : username,
-                       password: new_password == "" || new_password.nil? ? nil : new_password}.compact
+        user_params = {email: email.present? ? email : nil,
+                       name: name.present? ? name : nil,
+                       username: username.present? ? username : nil,
+                       password: new_password.present? ? new_password : nil}.compact
 
         if user.update(user_params)
           # UserNotifierMailer.send_update_email(user).deliver
@@ -118,7 +118,7 @@ module Types
     def block_user(token:, user_id:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -143,7 +143,7 @@ module Types
     def destroy_user(token:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -186,7 +186,7 @@ module Types
                     twitter:nil, facebook:nil, linked_in:nil, instagram:nil)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -211,7 +211,7 @@ module Types
 
       card = Card.create!(
           card_name: card_name,
-          display_name: display_name || card_name,
+          display_name: display_name.present? ? display_name : card_name,
           name: name,
           business_name: business_name,
           number: number,
@@ -259,7 +259,7 @@ module Types
                     twitter:nil, facebook:nil, linked_in:nil, instagram:nil)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -267,38 +267,50 @@ module Types
       end
       
       card = Card.find_by(id: id, author_id:user.id)
-      return unless card
+      raise GraphQL::ExecutionError, "Card does not exist" unless card
 
-      if address.address1
-        card_address = card.address
-
-        address_params = {address1: address.address1 || card_address.address1,
-                          address2: address.address2 || card_address.address2, 
-                          city: address.city || card_address.city, 
-                          state: address.state || card_address.state, 
-                          postal_code: address.postal_code || card_address.postal_code}
+      if address.present?
+        if card.address.present?
+          address_params = {address1: address.address1.present? ? address.address1 : card.address.address1,
+                            address2: address.address2.present? ? address.address2 : card.address.address2, 
+                            city: address.city.present? ? address.city : card.address.city, 
+                            state: address.state.present? ? address.state : card.address.state, 
+                            postal_code: address.postal_code.present? ? address.postal_code : card.address.postal_code} 
+        else
+          address_params = {address1: address.address1.present? ? address.address1 : nil,
+                            address2: address.address2.present? ? address.address2 : nil, 
+                            city: address.city.present? ? address.city : nil, 
+                            state: address.state.present? ? address.state : nil, 
+                            postal_code: address.postal_code.present? ? address.postal_code : nil}          
+        end
 
         address_object = Address.find_by(address_params)
         unless address_object
           address_object = Address.create!(address_params)
         end
-        address_id = address_object.id
+
+        if address_object.id == card.address.id
+          card.update(address_id: nil)
+          address_id = nil
+        else
+          address_id = address_object.id
+        end
       else
         address_id = nil  
       end
 
-      card_params = {card_name: card_name, 
-                     display_name: display_name, 
-                     name: name, 
-                     business_name: business_name, 
-                     number:number, 
-                     email: email, 
-                     address_id: address_id,
-                     birth_date: birth_date,
-                     twitter: twitter, 
-                     facebook: facebook, 
-                     linked_in: linked_in, 
-                     instagram: instagram}.compact
+      card_params = {card_name: card_name.present? ? card_name : nil, 
+                     display_name: display_name.present? ? display_name : nil, 
+                     name: name.present? ? name : nil, 
+                     business_name: business_name.present? ? business_name : nil, 
+                     number: number.present? ? number : nil, 
+                     email: email.present? ? email : nil, 
+                     address_id: address_id.present? ? address_id : nil,
+                     birth_date: birth_date.present? ? birth_date : nil,
+                     twitter: twitter.present? ? twitter : nil, 
+                     facebook: facebook.present? ? facebook : nil, 
+                     linked_in: linked_in.present? ? linked_in : nil, 
+                     instagram: instagram.present? ? instagram : nil}.compact
 
       if card.update(card_params)
         card
@@ -314,7 +326,7 @@ module Types
     def destroy_card(token:, id:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -322,7 +334,7 @@ module Types
       end
 
       card = Card.find_by(id: id, author_id:user.id)
-      return unless card
+      raise GraphQL::ExecutionError, "Card does not exist" unless card
 
       if card.destroy
         OpenStruct.new({
@@ -345,7 +357,7 @@ module Types
     def create_connection(token:, card_token:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -354,7 +366,7 @@ module Types
 
       begin
         card = AuthorizedCardRequest.call(card_token).result
-        return unless card
+        raise GraphQL::ExecutionError, "Card does not exist" unless card
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -362,7 +374,7 @@ module Types
       end
        
       connection = Connection.find_by(card_id:card.id, user_id:user.id)
-      return if connection
+      raise GraphQL::ExecutionError, "This connection already exist" if connection
       
       if card
           connection = Connection.create!(
@@ -384,7 +396,7 @@ module Types
     def update_connection(token:, id:, card_id:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -392,10 +404,10 @@ module Types
       end
 
       connection = Connection.find_by(id:id, contact_id:user.id)
-      return unless connection
+      raise GraphQL::ExecutionError, "Connection does not exist" unless connection
 
       card = Card.find_by(id:card_id, user_id:user.id)
-      return unless card
+      raise GraphQL::ExecutionError, "Card does not exist" unless card
 
       if connection.update(card_id: card.id)
           connection
@@ -410,7 +422,7 @@ module Types
     def favorite(token:, card_id:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -418,7 +430,7 @@ module Types
       end
 
       connection = Connection.find_by(card_id:card_id, user_id:user.id)
-      return unless connection
+      raise GraphQL::ExecutionError, "Connection does not exist" unless connection
 
       if connection.update(favorite: true)
           connection
@@ -434,7 +446,7 @@ module Types
     def unfavorite(token:, card_id:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -442,7 +454,7 @@ module Types
       end
 
       connection = Connection.find_by(card_id:card_id, user_id:user.id)
-      return unless connection
+      raise GraphQL::ExecutionError, "Connection does not exist" unless connection
 
       if connection.update(favorite: false)
           connection
@@ -457,7 +469,7 @@ module Types
     def destroy_connection(token:, id:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -465,7 +477,7 @@ module Types
       end
 
       connection = Connection.find_by(id:id, contact_id:user.id) || Connection.find_by(id:id, user_id:user.id)
-      return unless connection
+      raise GraphQL::ExecutionError, "Connection does not exist" unless connection
 
       if connection.destroy
         OpenStruct.new({
@@ -491,7 +503,7 @@ module Types
     def create_log(token:, card_id:, date:Time.now.to_date, text:)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -499,10 +511,10 @@ module Types
       end
 
       connection = Connection.find_by(user_id:user.id, card_id: card_id)
-      return unless connection
+      raise GraphQL::ExecutionError, "Connection does not exist" unless connection
 
       card = Card.find_by(id:card_id)
-      return unless card
+      raise GraphQL::ExecutionError, "Card does not exist" unless card
 
       print connection
 
@@ -525,7 +537,7 @@ module Types
     def update_log(token:, id:, date:nil, text:nil)
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -533,10 +545,10 @@ module Types
       end
 
       log = Log.find_by(id:id, user_id:user.id)
-      return unless log
+      raise GraphQL::ExecutionError, "Log does not exist" unless log
 
-      log_params = {date: date,
-                    text: text}.compact
+      log_params = {date: date.present? ? date : nil,
+                    text: text.present? ? text : nil}.compact
 
       if log.update(log_params)
           log
@@ -551,7 +563,7 @@ module Types
     def destroy_log
       begin
         user = AuthorizeUserRequest.call(token).result
-        return unless user
+        raise GraphQL::ExecutionError, "User does not exist" unless user
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
@@ -559,7 +571,7 @@ module Types
       end
       
       log = Log.find_by(id:id, user_id:user.id)
-      return unless log
+      raise GraphQL::ExecutionError, "Log does not exist" unless log
 
       if log.destroy
         OpenStruct.new({
