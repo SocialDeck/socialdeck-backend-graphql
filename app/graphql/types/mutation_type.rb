@@ -86,7 +86,7 @@ module Types
       user_params = {email: email.present? ? email : nil,
                       name: name.present? ? name : nil,
                       username: username.present? ? username : nil,
-                      password: new_password.present? ? new_password : nil}.compact
+                      password: password.present? ? password : nil}.compact
 
       if user.update(user_params)
         # UserNotifierMailer.send_update_email(user).deliver
