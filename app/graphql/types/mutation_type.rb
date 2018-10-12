@@ -48,7 +48,7 @@ module Types
 
     field :confirmUser, Types::UserType, null: false do
       argument :token, String, required: true
-   end
+    end
 
     def confirm_user(token:)
       begin
@@ -65,17 +65,15 @@ module Types
       end
     end
 
-
     field :updateUser, Types::UserType, null: true do
       argument :token, String, required: true
       argument :username, String, required: false
       argument :name, String, required: false
-      argument :old_password, String, required:true
-      argument :new_password, String, required: false
+      argument :password, String, required: false
       argument :email, String, required: false
-   end
+    end
 
-    def update_user(token:, username:nil, old_password:, new_password:nil, name:nil, email:nil)
+    def update_user(token:, username:nil, password:nil, name:nil, email:nil)
       begin
         user = AuthorizeUserRequest.call(token).result
         raise GraphQL::ExecutionError, "User does not exist" unless user
@@ -85,16 +83,14 @@ module Types
         raise GraphQL::ExecutionError, e.message        
       end
 
-      if user && user.authenticate(old_password)
-        user_params = {email: email.present? ? email : nil,
-                       name: name.present? ? name : nil,
-                       username: username.present? ? username : nil,
-                       password: new_password.present? ? new_password : nil}.compact
+      user_params = {email: email.present? ? email : nil,
+                      name: name.present? ? name : nil,
+                      username: username.present? ? username : nil,
+                      password: new_password.present? ? new_password : nil}.compact
 
-        if user.update(user_params)
-          # UserNotifierMailer.send_update_email(user).deliver
-          user
-        end
+      if user.update(user_params)
+        # UserNotifierMailer.send_update_email(user).deliver
+        user
       end
     end
 
