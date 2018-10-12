@@ -279,28 +279,31 @@ module Types
                             address2: address.address2.present? ? address.address2 : card.address.address2, 
                             city: address.city.present? ? address.city : card.address.city, 
                             state: address.state.present? ? address.state : card.address.state, 
-                            postal_code: address.postal_code.present? ? address.postal_code : card.address.postal_code} 
+                            postal_code: address.postal_code.present? ? address.postal_code : card.address.postal_code}
+                            
+          address_object = Address.find_by(address_params)
+          if address_object.id == card.address.id
+            card.update(address_id: nil)
+            address_id = nil
+          else
+            address_id = address_object.id
+          end                                  
         else
           address_params = {address1: address.address1.present? ? address.address1 : nil,
                             address2: address.address2.present? ? address.address2 : nil, 
                             city: address.city.present? ? address.city : nil, 
                             state: address.state.present? ? address.state : nil, 
-                            postal_code: address.postal_code.present? ? address.postal_code : nil}          
-        end
+                            postal_code: address.postal_code.present? ? address.postal_code : nil}.compact 
 
-        address_object = Address.find_by(address_params)
-        unless address_object
-          address_object = Address.create!(address_params)
-        end
-
-        if address_object.id == card.address.id
-          card.update(address_id: nil)
-          address_id = nil
-        else
+          address_object = Address.find_by(address_params)
+          unless address_object
+            address_object = Address.create!(address_params)
+          end 
+        
           address_id = address_object.id
         end
       else
-        address_id = nil  
+        address_id = nil
       end
 
       card_params = {card_name: card_name.present? ? card_name : nil, 

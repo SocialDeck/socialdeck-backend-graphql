@@ -1,6 +1,9 @@
 module Types
   class CardType < Types::BaseObject
     field :id, ID, null: false
+    field :card_token, String, null: false do
+      argument :token, String, required: true
+    end    
     field :user, Types::UserType, null: true
     field :author, Types::UserType, null: false
     field :card_name, String, null: false
@@ -9,6 +12,7 @@ module Types
     field :business_name, String, null: true
     field :address, Types::AddressType, null: true
     field :number, String, null: true
+    field :mobile, Boolean, null: false
     field :email, String, null: true
     field :birth_date, Types::DateTimeType, null: true
     field :twitter, String, null: true
@@ -16,10 +20,6 @@ module Types
     field :facebook, String, null: true
     field :instagram, String, null: true
     field :verified, Boolean, null: false
-    field :mobile, Boolean, null: false
-    field :card_token, String, null: false do
-      argument :token, String, required: true
-    end
     field :favorite, Boolean, null: false do
       argument :token, String, required: false
     end    
