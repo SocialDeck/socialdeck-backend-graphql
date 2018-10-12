@@ -47,7 +47,15 @@ module Types
    end
 
     def confirm_user(token:)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+
       if user.update(confirmed: true)
         user
       end
@@ -64,7 +72,15 @@ module Types
    end
 
     def update_user(token:, username:nil, old_password:, new_password:nil, name:nil, email:nil)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+
       if user && user.authenticate(old_password)
         user_params = {email: email == "" || email.nil? ? nil : email,
                        name: name == "" || name.nil? ? nil : name,
@@ -79,13 +95,13 @@ module Types
     end
 
     field :reset_password, Types::NullType, null: false do
-      argument :username, String, required: true
+      argument :email, String, required: true
    end
 
-    def reset_password(username:)
-      user = User.find_by_username(username)
+    def reset_password(email:)
+      user = User.find_by_email(email)
       token = JsonWebToken.encode(user_id: user.id, exp: 3.hours.from_now)
-      # UserNotifierMailer.send_reset_password_email(user, token).deliver
+      UserNotifierMailer.send_reset_password_email(user, token).deliver
 
       OpenStruct.new({
         message: "Message sent"
@@ -100,7 +116,14 @@ module Types
     end
 
     def block_user(token:, user_id:)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
 
       connections = Connection.where(user_id:user_id, contact_id:user.id)
       connections.destroy_all
@@ -118,8 +141,14 @@ module Types
     end
 
     def destroy_user(token:)
-      user = AuthorizeUserRequest.call(token).result
-      return unless user
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
 
       if user.destroy
         OpenStruct.new({
@@ -155,7 +184,15 @@ module Types
     def create_card(token:, owned:true, card_name:, display_name:nil, name:, 
                     business_name:nil, number:nil, email:nil, address:nil, birth_date:nil,
                     twitter:nil, facebook:nil, linked_in:nil, instagram:nil)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+
       if address
         address_object = Address.find_by(address.to_h)
         unless address_object
@@ -220,7 +257,15 @@ module Types
     def update_card(token:, id:, card_name:nil, display_name:nil, name:nil, 
                     business_name:nil, number:nil, email:nil, address:nil, birth_date:nil,
                     twitter:nil, facebook:nil, linked_in:nil, instagram:nil)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+      
       card = Card.find_by(id: id, author_id:user.id)
       return unless card
 
@@ -267,8 +312,14 @@ module Types
     end
 
     def destroy_card(token:, id:)
-      user = AuthorizeUserRequest.call(token).result
-      return unless user
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
 
       card = Card.find_by(id: id, author_id:user.id)
       return unless card
@@ -292,9 +343,24 @@ module Types
     end
 
     def create_connection(token:, card_token:)
-      user = AuthorizeUserRequest.call(token).result
-      card = AuthorizedCardRequest.call(card_token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
 
+      begin
+        card = AuthorizedCardRequest.call(card_token).result
+        return unless card
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+       
       connection = Connection.find_by(card_id:card.id, user_id:user.id)
       return if connection
       
@@ -316,8 +382,14 @@ module Types
     end
 
     def update_connection(token:, id:, card_id:)
-      user = AuthorizeUserRequest.call(token).result
-      return unless user
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
 
       connection = Connection.find_by(id:id, contact_id:user.id)
       return unless connection
@@ -336,8 +408,14 @@ module Types
     end
 
     def favorite(token:, card_id:)
-      user = AuthorizeUserRequest.call(token).result
-      return unless user
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
 
       connection = Connection.find_by(card_id:card_id, user_id:user.id)
       return unless connection
@@ -354,8 +432,14 @@ module Types
     end
 
     def unfavorite(token:, card_id:)
-      user = AuthorizeUserRequest.call(token).result
-      return unless user
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
 
       connection = Connection.find_by(card_id:card_id, user_id:user.id)
       return unless connection
@@ -371,8 +455,14 @@ module Types
     end
 
     def destroy_connection(token:, id:)
-      user = AuthorizeUserRequest.call(token).result
-      return unless user
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
 
       connection = Connection.find_by(id:id, contact_id:user.id) || Connection.find_by(id:id, user_id:user.id)
       return unless connection
@@ -399,9 +489,14 @@ module Types
     end
 
     def create_log(token:, card_id:, date:Time.now.to_date, text:)
-      user = AuthorizeUserRequest.call(token).result
-      return unless user
-      print User
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
 
       connection = Connection.find_by(user_id:user.id, card_id: card_id)
       return unless connection
@@ -428,8 +523,14 @@ module Types
     end
 
     def update_log(token:, id:, date:nil, text:nil)
-      user = AuthorizeUserRequest.call(token).result
-      return unless user
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
 
       log = Log.find_by(id:id, user_id:user.id)
       return unless log
@@ -448,9 +549,15 @@ module Types
     end    
 
     def destroy_log
-      user = AuthorizeUserRequest.call(token).result
-      return unless user
-
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+      
       log = Log.find_by(id:id, user_id:user.id)
       return unless log
 

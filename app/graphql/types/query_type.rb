@@ -16,7 +16,15 @@ module Types
     end
 
     def blocked_users(token:)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+      
       User.where(id: Connection.where(card_id: -1, contact_id: user.id).pluck(:user_id))
     end
 
@@ -27,7 +35,13 @@ module Types
     end
 
     def card(card_token:)
-      card = AuthorizedCardRequest.call(card_token).result
+      begin
+        AuthorizedCardRequest.call(card_token).result
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end    
     end    
 
     field :share_card_by_email, String, null: true do
@@ -37,7 +51,15 @@ module Types
     end
 
     def share_card_by_email(token:, id:, email:)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+      
       card = Card.find_by(user_id: user.id, id: id)
       card_token = AuthenticateCard.call(user.id, card.id).result
       # UserNotifierMailer.send_card_email(user, card, card_token, email).deliver
@@ -48,7 +70,15 @@ module Types
     end
 
     def authored_cards(token:)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+      
       Card.where(author_id: user.id, user_id: nil)
     end     
 
@@ -57,7 +87,15 @@ module Types
     end
 
     def owned_cards(token:)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+      
       Card.where(user_id: user.id)
     end
 
@@ -67,7 +105,15 @@ module Types
     end
 
     def contacts(token:, search:nil)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+      
       if search
         Card.where(id: Connection.where(user_id: user.id).pluck(:card_id)).where.not(id: -1).order(:name).search(search)
       else
@@ -80,7 +126,15 @@ module Types
     end
 
     def favorites(token:)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+      
       Card.where(id: Connection.where(user: user.id, favorite:true).pluck(:card_id)).where.not(id: -1).order(:name)
     end
 
@@ -91,7 +145,15 @@ module Types
     end
 
     def subscribers(token:)
-      user = AuthorizeUserRequest.call(token).result
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        return unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+      
       Connection.where(contact_id: user.id).where.not(card_id: -1).left_outer_joins(:user).order('"users"."name"')
     end
 
