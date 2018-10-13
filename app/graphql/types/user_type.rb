@@ -1,7 +1,6 @@
 module Types
   class UserType < Types::BaseObject
     field :id, ID, null: false
-    field :username, String, null: false
     field :name, String, null: false do
       argument :token, String, required: true
     end
@@ -14,9 +13,9 @@ module Types
       connections = Connection.where(contact_id: object.id, user_id: current_user.id).where.not(card_id: -1)
       name_field = ''
       connections.each do |connection|
-        name_field = connection.card.name ? connection.card.name : name_field
+        name_field = connection.card.name.present? ? connection.card.name : name_field
       end
-      name_field != '' ? name_field : object.name
+      name_field.present? ? name_field : object.name
     end 
 
 

@@ -10,9 +10,8 @@ module Types
       raise GraphQL::ExecutionError, "User does not exist" unless credential_user
 
       if credential_user.authenticate(user[:password])
-        exp = user[:remember] ? 1.month.from_now : 2.hours.from_now
         OpenStruct.new({
-          token: JsonWebToken.encode(user_id: credential_user.id, exp: exp),
+          token: JsonWebToken.encode(user_id: credential_user.id),
           user: credential_user
         })
       else
@@ -37,8 +36,8 @@ module Types
         )
 
       if user.save
-        token = JsonWebToken.encode(user_id: user.id, exp: 48.hours.from_now)
-        UserNotifierMailer.send_signup_email(user, token).deliver
+        # token = JsonWebToken.encode(user_id: user.id, exp: 48.hours.from_now)
+        # UserNotifierMailer.send_signup_email(user, token).deliver
         OpenStruct.new({
           token: JsonWebToken.encode(user_id: user.id),
           user: user
@@ -46,24 +45,24 @@ module Types
       end       
     end
 
-    field :confirmUser, Types::UserType, null: false do
-      argument :token, String, required: true
-    end
+    # field :confirmUser, Types::UserType, null: false do
+    #   argument :token, String, required: true
+    # end
 
-    def confirm_user(token:)
-      begin
-        user = AuthorizeUserRequest.call(token).result
-        raise GraphQL::ExecutionError, "User does not exist" unless user
-      rescue ExceptionHandler::ExpiredSignature => e
-        raise GraphQL::ExecutionError, e.message
-      rescue ExceptionHandler::DecodeError => e
-        raise GraphQL::ExecutionError, e.message        
-      end
+    # def confirm_user(token:)
+    #   begin
+    #     user = AuthorizeUserRequest.call(token).result
+    #     raise GraphQL::ExecutionError, "User does not exist" unless user
+    #   rescue ExceptionHandler::ExpiredSignature => e
+    #     raise GraphQL::ExecutionError, e.message
+    #   rescue ExceptionHandler::DecodeError => e
+    #     raise GraphQL::ExecutionError, e.message        
+    #   end
 
-      if user.update(confirmed: true)
-        user
-      end
-    end
+    #   if user.update(confirmed: true)
+    #     user
+    #   end
+    # end
 
     field :updateUser, Types::UserType, null: true do
       argument :token, String, required: true
@@ -83,10 +82,10 @@ module Types
         raise GraphQL::ExecutionError, e.message        
       end
 
-      user_params = {email: email.present? ? email : nil,
-                      name: name.present? ? name : nil,
-                      username: username.present? ? username : nil,
-                      password: password.present? ? password : nil}.compact
+      user_params = {email: email,
+                     name: name,
+                     username: username,
+                     password: password}.reject{|k,v| v.blank?}
 
       if user.update(user_params)
         # UserNotifierMailer.send_update_email(user).deliver
@@ -193,14 +192,10 @@ module Types
         raise GraphQL::ExecutionError, e.message        
       end
 
-      if address
-        address_object = Address.create!(
-          address1: address.address1,
-          address2: address.address2,
-          city: address.city,
-          state: address.state,
-          postal_code: address.postal_code
-        )
+      address_params = address.to_h.reject{|k,v| v.blank?} 
+      
+      if address_params.present?
+        address_object = Address.create!(address_params)
         address_id = address_object.id
       else
         address_id = nil  
@@ -266,50 +261,36 @@ module Types
       card = Card.find_by(id: id, author_id:user.id)
       raise GraphQL::ExecutionError, "Card does not exist" unless card
 
+      address_params = address.to_h.reject{|k,v| v.blank?}
+      current_address = card.address
 
-      if address.present?
-        if card.address.present?
-          address_params = {address1: address.address1.present? ? address.address1 : card.address.address1,
-                            address2: address.address2.present? ? address.address2 : card.address.address2, 
-                            city: address.city.present? ? address.city : card.address.city, 
-                            state: address.state.present? ? address.state : card.address.state, 
-                            postal_code: address.postal_code.present? ? address.postal_code : card.address.postal_code}
-                            
-          address_object = Address.find_by(address_params)
-          if address_object.id == card.address.id
-            card.update(address_id: nil)
-            address_id = nil
-          else
-            card.address.update(address_params)
-            address_id = card.address.id
-          end                                  
-        else
-          address_params = {address1: address.address1.present? ? address.address1 : nil,
-                            address2: address.address2.present? ? address.address2 : nil, 
-                            city: address.city.present? ? address.city : nil, 
-                            state: address.state.present? ? address.state : nil, 
-                            postal_code: address.postal_code.present? ? address.postal_code : nil}.compact 
-
-
-          address_object = Address.create!(address_params)
-          address_id = address_object.id
-        end
+      if current_address.present? && address_params.blank?
+        card.update(address_id: nil)
+        current_address.destroy
+        address_id = nil
+      elsif current_address.present? && address_params.present?
+        current_address.update(address_params)
+        address_id = current_address.id
+      elsif current_address.blank? && address_params.present?
+        address_object = Address.create!(address_params)
+        address_id = address_object.id
       else
         address_id = nil
       end
 
-      card_params = {card_name: card_name.present? ? card_name : nil, 
-                     display_name: display_name.present? ? display_name : nil, 
-                     name: name.present? ? name : nil, 
-                     business_name: business_name.present? ? business_name : nil, 
-                     number: number.present? ? number : nil, 
-                     email: email.present? ? email : nil, 
-                     address_id: address_id.present? ? address_id : nil,
-                     birth_date: birth_date.present? ? birth_date : nil,
-                     twitter: twitter.present? ? twitter : nil, 
-                     facebook: facebook.present? ? facebook : nil, 
-                     linked_in: linked_in.present? ? linked_in : nil, 
-                     instagram: instagram.present? ? instagram : nil}.compact
+
+      card_params = {card_name: card_name, 
+                     display_name: display_name, 
+                     name: name, 
+                     business_name: business_name, 
+                     number: number, 
+                     email: email, 
+                     address_id: address_id,
+                     birth_date: birth_date,
+                     twitter: twitter, 
+                     facebook: facebook, 
+                     linked_in: linked_in, 
+                     instagram: instagram}.reject{|k,v| v.blank?}
 
       if card.update(card_params)
         card
