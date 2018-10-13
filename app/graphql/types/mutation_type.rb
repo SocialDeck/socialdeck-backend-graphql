@@ -264,7 +264,9 @@ module Types
       address_params = address.to_h.reject{|k,v| v.blank?}
       current_address = card.address
 
-      if current_address.present? && address_params.blank?
+      if address.blank?
+        address_id = nil
+      elsif current_address.present? && address_params.blank?
         card.update(address_id: nil)
         current_address.destroy
         address_id = nil
