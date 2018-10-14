@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_10_08_210241) do
+ActiveRecord::Schema.define(version: 2018_10_13_222229) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
@@ -73,6 +73,16 @@ ActiveRecord::Schema.define(version: 2018_10_08_210241) do
     t.index ["card_id"], name: "index_logs_on_card_id"
     t.index ["contact_id"], name: "index_logs_on_contact_id"
     t.index ["user_id"], name: "index_logs_on_user_id"
+  end
+
+  create_table "shortlinks", force: :cascade do |t|
+    t.string "token"
+    t.string "jwt"
+    t.datetime "expires_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["jwt"], name: "index_shortlinks_on_jwt", unique: true
+    t.index ["token"], name: "index_shortlinks_on_token", unique: true
   end
 
   create_table "users", force: :cascade do |t|

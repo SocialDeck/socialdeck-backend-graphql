@@ -17,6 +17,7 @@ class AuthorizedCardRequest
   end
 
   def decoded_auth_token
-    @decoded_auth_token ||= JsonWebToken.decode(@token)
+    url = Shortlink.where("expires_at >= ? ", Time.now).or(Shortlink.where(expires_at: nil)).find_by(token: @token)
+    @decoded_auth_token ||= JsonWebToken.decode(url.jwt) if url
   end
 end

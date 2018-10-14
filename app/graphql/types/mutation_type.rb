@@ -461,6 +461,9 @@ module Types
       connection = Connection.find_by(id:id, contact_id:user.id) || Connection.find_by(id:id, user_id:user.id)
       raise GraphQL::ExecutionError, "Connection does not exist" unless connection
 
+      jwt = JsonWebToken.encode(card_id: connection.card.id, user_id: connection.user.id)
+      Shortlink.where(jwt: jwt).destroy_all
+
       if connection.destroy
         OpenStruct.new({
           message: "This connection has been deleted"

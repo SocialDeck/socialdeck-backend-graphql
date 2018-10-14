@@ -10,7 +10,16 @@ class AuthenticateCard
   
   #this is where the result gets returned
   def call
-    JsonWebToken.encode(card_id: card.id) if card
+    if card
+      jwt = JsonWebToken.encode(card_id: card.id, user_id:@user_id)
+      if card.user && card.user.id == @user_id
+        Shortlink.where(jwt: jwt).where("expires_at < ? ", Time.now).destroy_all
+        url = Shortlink.create(jwt: jwt, expires_at: 48.hours.from_now)
+      else
+        url = Shortlink.find_or_create_by(jwt: jwt)
+      end
+      url.token
+    end
   end
 
   private
