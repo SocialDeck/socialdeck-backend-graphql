@@ -490,7 +490,7 @@ module Types
         raise GraphQL::ExecutionError, e.message        
       end
 
-      connection = Connection.find_by(card_id:id, user_id:user.id)
+      connection = Connection.find_by(card_id:card_id, user_id:user.id)
       raise GraphQL::ExecutionError, "Connection does not exist" unless connection
 
       jwt = JsonWebToken.encode(card_id: connection.card.id, user_id: connection.user.id)
@@ -532,8 +532,6 @@ module Types
 
       card = Card.find_by(id:card_id)
       raise GraphQL::ExecutionError, "Card does not exist" unless card
-
-      print connection
 
       Log.create!(
         user_id: user.id,

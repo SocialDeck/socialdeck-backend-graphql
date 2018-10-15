@@ -32,7 +32,6 @@ class AuthenticateCard
       card = Card.find(card_id)
     end
 
-    print card
     return card if card
 
     errors.add :user_authentication, 'Invalid credentials'
