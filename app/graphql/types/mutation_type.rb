@@ -475,6 +475,39 @@ module Types
       end
     end
 
+    field :unsubscribe, Types::NullType, null: true do
+      argument :token, String, required: true
+      argument :card_id, ID, required: true    
+    end
+
+    def unsubscribe(token:, card_id:)
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        raise GraphQL::ExecutionError, "User does not exist" unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+
+      connection = Connection.find_by(card_id:id, user_id:user.id)
+      raise GraphQL::ExecutionError, "Connection does not exist" unless connection
+
+      jwt = JsonWebToken.encode(card_id: connection.card.id, user_id: connection.user.id)
+      Shortlink.where(jwt: jwt).destroy_all
+
+      if connection.destroy
+        OpenStruct.new({
+          message: "This connection has been deleted"
+        })
+      else
+        OpenStruct.new({
+          message: connection.errors.full_message
+        })
+      end
+    end
+
+
     # Log Mutations
 
     field :createLog, Types::LogType, null: true do
