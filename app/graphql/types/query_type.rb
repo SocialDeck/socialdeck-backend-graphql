@@ -12,7 +12,7 @@ module Types
     end
 
     field :blocked_Users, [Types::UserType], null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
     end
 
     def blocked_users(token:)
@@ -31,7 +31,7 @@ module Types
     # Card Queries
 
     field :card, Types::CardType, null: true do
-      argument :card_token, String, required: true
+      argument :card_token, ID, required: true
     end
 
     def card(card_token:)
@@ -45,7 +45,7 @@ module Types
     end    
 
     field :share_card_by_email, String, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :id, ID, required: true
       argument :email, String, required: true
     end
@@ -66,7 +66,7 @@ module Types
     end 
 
     field :authored_cards, [Types::CardType], null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
     end
 
     def authored_cards(token:)
@@ -83,7 +83,7 @@ module Types
     end     
 
     field :owned_cards, [Types::CardType], null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
     end
 
     def owned_cards(token:)
@@ -100,7 +100,7 @@ module Types
     end
 
     field :contacts, [Types::CardType], null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :search, String, required: false
     end
 
@@ -122,7 +122,7 @@ module Types
     end
 
     field :favorites, [Types::CardType], null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
     end
 
     def favorites(token:)
@@ -141,7 +141,7 @@ module Types
     # Connection Queries
 
     field :subscribers, [Types::LinkType], null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
     end
 
     def subscribers(token:)
@@ -159,7 +159,7 @@ module Types
 
     # field :logs, [Types::LogType], null: true do
     #   argument :card_id, ID, required: true
-    #   argument :token, String, required: true
+    #   argument :token, ID, required: true
     # end
 
     # def logs(card_id:, token:)

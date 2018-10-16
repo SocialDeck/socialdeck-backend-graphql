@@ -46,7 +46,7 @@ module Types
     end
 
     # field :confirmUser, Types::UserType, null: false do
-    #   argument :token, String, required: true
+    #   argument :token, ID, required: true
     # end
 
     # def confirm_user(token:)
@@ -65,7 +65,7 @@ module Types
     # end
 
     field :updateUser, Types::UserType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :username, String, required: false
       argument :name, String, required: false
       argument :password, String, required: false
@@ -110,7 +110,7 @@ module Types
     
 
     field :blockUser, Types::LinkType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :user_id, ID, required: true
     end
 
@@ -136,7 +136,7 @@ module Types
     end
 
     field :destroyUser, Types::NullType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
     end
 
     def destroy_user(token:)
@@ -163,7 +163,7 @@ module Types
     # Card Mutations
 
     field :createCard, Types::CardType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :owned, Boolean, required: true
       argument :card_name, String, required: true
       argument :display_name, String, required: false
@@ -231,7 +231,7 @@ module Types
 
     field :updateCard, Types::CardType, null: true do
       argument :id, ID, required:true
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :card_name, String, required: false
       argument :display_name, String, required: false
       argument :name, String, required: false
@@ -301,7 +301,7 @@ module Types
     end
 
     field :destroyCard, Types::NullType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :id, ID, required: true    
     end
 
@@ -332,7 +332,7 @@ module Types
     # Connection Mutations
 
     field :createConnection, Types::LinkType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :card_token, ID, required: true
     end
 
@@ -369,8 +369,84 @@ module Types
       connection
     end
 
+   field :bridgeConnection, Types::LinkType, null: true do
+      argument :token, ID, required: true
+      argument :user_id, ID, required:true
+      argument :card_token, ID, required: true
+    end
+
+    def bridge_connection(token:, user_id:, card_token:)
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        raise GraphQL::ExecutionError, "User does not exist" unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+
+      begin
+        card = AuthorizedCardRequest.call(card_token).result
+        raise GraphQL::ExecutionError, "Card does not exist" unless card
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+       
+      raise GraphQL::ExecutionError, "This user does not own this card" if card.user_id != user.id
+
+      connection = Connection.find_by(card_id:card.id, user_id:user_id)
+      raise GraphQL::ExecutionError, "This connection already exist" if connection
+      
+      if card
+          connection = Connection.create!(
+            user_id: user_id,
+            contact_id: card.user_id,
+            card_id: card.id
+          )
+          # UserNotifierMailer.send_connection_email(user).deliver
+      end
+      connection
+    end   
+
+   field :requestConnection, Types::NullType, null: true do
+      argument :token, ID, required: true
+      argument :user_id, ID, required:true
+    end
+
+   def request_connection(token:, user_id:)
+      begin
+        user = AuthorizeUserRequest.call(token).result
+        raise GraphQL::ExecutionError, "User does not exist" unless user
+      rescue ExceptionHandler::ExpiredSignature => e
+        raise GraphQL::ExecutionError, e.message
+      rescue ExceptionHandler::DecodeError => e
+        raise GraphQL::ExecutionError, e.message        
+      end
+
+      connection = Connection.find_by(user_id:user.id, contact_id:user_id)
+      raise GraphQL::ExecutionError, "This connection already exist" if connection
+
+      connection = Connection.find_by(contact_id:user.id, user_id:user_id)
+      raise GraphQL::ExecutionError, "Must have one-way connection to request connection" unless connection      
+      
+      card_token = AuthenticateCard.call(user_id, connection.card_id).result
+
+      requested_user = User.find(user_id)
+      UserNotifierMailer.send_connection_email(requested_user, card_token, connection.card.name).deliver
+
+      OpenStruct.new({
+        message: "This connection has been deleted"
+      })   
+
+    end
+
+
+
+
     field :updateConnection, Types::LinkType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :id, ID, required: true
       argument :card_id, ID, required: true
     end
@@ -397,7 +473,7 @@ module Types
     end
 
     field :favorite, Types::LinkType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :card_id, ID, required: true
     end
 
@@ -421,7 +497,7 @@ module Types
 
 
     field :unfavorite, Types::LinkType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :card_id, ID, required: true
     end
 
@@ -444,7 +520,7 @@ module Types
     end
 
     field :destroyConnection, Types::NullType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :id, ID, required: true    
     end
 
@@ -476,7 +552,7 @@ module Types
     end
 
     field :unsubscribe, Types::NullType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :card_id, ID, required: true    
     end
 
@@ -511,7 +587,7 @@ module Types
     # Log Mutations
 
     field :createLog, Types::LogType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :card_id, ID, required: true
       argument :date, Types::DateTimeType, required: false
       argument :text, String, required: true
@@ -543,7 +619,7 @@ module Types
     end
 
     field :updateLog, Types::LogType, null: true do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :id, ID, required: true
       argument :date, Types::DateTimeType, required: false
       argument :text, String, required: false
@@ -571,7 +647,7 @@ module Types
     end
 
     field :destroyLog, Types::NullType, null: false do
-      argument :token, String, required: true
+      argument :token, ID, required: true
       argument :id, ID, required: true
     end    
 

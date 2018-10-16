@@ -1,6 +1,6 @@
 module Types
   class TokenType < Types::BaseObject
     field :user, Types::UserType, null: false
-    field :token, String, null: false
+    field :token, ID, null: false
   end
 end

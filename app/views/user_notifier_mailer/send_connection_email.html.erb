@@ -1,7 +1,7 @@
 <p>Hello <%= @user.name %>!</p>
 
-<p>You made a new connection!</p>
+<p><%= @requester_name %> has shared their contact information with you and would like to have yours as well!</p>
 
-<p>To view your connections visit:</p>
+<p>To view this connections and share a card with them visit:</p>
 
-<p><%= link_to 'View Account', "socialdeck.xyz/myaccount/connections/#{@token}" %></p>
+<p><%= link_to 'View Card', "https://socialdeck.xyz/conacts/#{@card_token}" %></p>

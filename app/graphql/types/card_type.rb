@@ -1,8 +1,8 @@
 module Types
   class CardType < Types::BaseObject
     field :id, ID, null: false
-    field :card_token, String, null: false do
-      argument :token, String, required: true
+    field :card_token, ID, null: false do
+      argument :token, ID, required: true
     end    
     field :user, Types::UserType, null: true
     field :author, Types::UserType, null: false
@@ -21,7 +21,10 @@ module Types
     field :instagram, String, null: true
     field :verified, Boolean, null: false
     field :favorite, Boolean, null: false do
-      argument :token, String, required: false
+      argument :token, ID, required: false
+    end    
+    field :mutual, Boolean, null: false do
+      argument :token, ID, required: false
     end    
 
     def verified
@@ -41,6 +44,15 @@ module Types
       return false unless connection
 
       connection.favorite || false
+    end  
+
+    def mutual(token:nil)
+      return true if object.user.blank?
+      
+      user = AuthorizeUserRequest.call(token).result
+      connection = Connection.find_by(contact_id:user.id, user_id:object.user.id)
+
+      !!connection
     end  
 
     def mobile

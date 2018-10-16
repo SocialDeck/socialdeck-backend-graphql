@@ -28,11 +28,13 @@ class UserNotifierMailer < ApplicationMailer
       )
     end
 
-    def send_connection_email(user)
+    def send_connection_email(user, card_token, requester_name)
       @user = user
+      @card_token = card_token
+      @requester_name = requester_name
       mail(
         :to => @user.email,
-        :subject => 'New Connection!'
+        :subject => "#{@requester_name} is requesting your contatct information."
       )
     end
 
