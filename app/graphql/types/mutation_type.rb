@@ -261,12 +261,18 @@ module Types
       card = Card.find_by(id: id, author_id:user.id)
       raise GraphQL::ExecutionError, "Card does not exist" unless card
 
-      address_params = address.to_h.reject{|k,v| v.blank?}
       current_address = card.address
+
+      if current_address.present?
+        current_address_params = current_address.attributes.to_options.except(:id, :created_at, :updated_at)
+        address_params = address.to_h.with_defaults(current_address_params)
+      else
+        address_params = address.to_h
+      end
 
       if address.blank?
         address_id = nil
-      elsif current_address.present? && address_params.blank?
+      elsif current_address.present? && address_params.reject{|k,v| v.blank?}.blank?
         card.update(address_id: nil)
         current_address.destroy
         address_id = nil
@@ -292,7 +298,7 @@ module Types
                      twitter: twitter, 
                      facebook: facebook, 
                      linked_in: linked_in, 
-                     instagram: instagram}.reject{|k,v| v.blank?}
+                     instagram: instagram}.compact
 
       if card.update(card_params)
         card
@@ -441,9 +447,6 @@ module Types
       })   
 
     end
-
-
-
 
     field :updateConnection, Types::LinkType, null: true do
       argument :token, ID, required: true

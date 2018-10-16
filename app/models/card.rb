@@ -7,8 +7,6 @@ class Card < ApplicationRecord
   has_many :connections, dependent: :destroy
   has_many :logs, dependent: :destroy
 
-  validates :email, 'valid_email_2/email': true
-
   pg_search_scope :search,
                   :against => [:name],
                   :using => {
@@ -18,8 +16,7 @@ class Card < ApplicationRecord
                   }                  
 
   def number=(number)
-    phone_object = TelephoneNumber.parse(number, :us)
-    self[:number] = phone_object.national_number if phone_object.valid?
+    self[:number] = ActionController::Base.helpers.number_to_phone(number, area_code: true)
   end
 
 end
