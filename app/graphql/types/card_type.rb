@@ -48,6 +48,7 @@ module Types
 
     def mutual(token:nil)
       return true if object.user.blank?
+      return true if token.blank?
       
       user = AuthorizeUserRequest.call(token).result
       connection = Connection.find_by(contact_id:user.id, user_id:object.user.id)
