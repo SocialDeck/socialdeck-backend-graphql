@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AuthorizeUserRequest
   prepend SimpleCommand
 
@@ -19,5 +21,4 @@ class AuthorizeUserRequest
   def decoded_auth_token
     @decoded_auth_token ||= JsonWebToken.decode(@token)
   end
-
 end

@@ -1,11 +1,12 @@
+# frozen_string_literal: true
+
 module Types
   class UserType < Types::BaseObject
     field :id, ID, null: false
-    field :username, String, null:false
+    field :username, String, null: false
     field :name, String, null: false do
       argument :token, ID, required: true
     end
-
 
     def name(token:)
       current_user = AuthorizeUserRequest.call(token).result
@@ -17,8 +18,6 @@ module Types
         name_field = connection.card.name.present? ? connection.card.name : name_field
       end
       name_field.present? ? name_field : object.name
-    end 
-
-
+    end
   end
 end

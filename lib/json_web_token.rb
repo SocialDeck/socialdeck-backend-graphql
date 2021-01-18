@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 class JsonWebToken
-# our secret key to encode our jwt
+  # our secret key to encode our jwt
 
   class << self
     def encode(payload)
@@ -7,7 +9,7 @@ class JsonWebToken
     end
 
     def decode(token)
-      #decodes the token to get user data (payload)
+      # decodes the token to get user data (payload)
       body = JWT.decode(token, Rails.application.credentials.secret_key_base)[0]
       HashWithIndifferentAccess.new body
 

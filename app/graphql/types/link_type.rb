@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Types
   class LinkType < Types::BaseObject
     field :id, ID, null: false
@@ -8,7 +10,7 @@ module Types
     field :mutual, Boolean, null: false
 
     def mutual
-      connection = Connection.find_by(user_id:object.contact.id, contact_id:object.user.id)
+      connection = Connection.find_by(user_id: object.contact.id, contact_id: object.user.id)
       !!connection
     end
   end

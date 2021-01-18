@@ -4,9 +4,9 @@ module Types
   class QueryType < Types::BaseObject
 
     # User Endpoints
-    
-    field :users, [Types::UserType], null: true 
-        
+
+    field :users, [Types::UserType], null: true
+
     def users
       User.all
     end
@@ -22,9 +22,9 @@ module Types
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
-        raise GraphQL::ExecutionError, e.message        
+        raise GraphQL::ExecutionError, e.message
       end
-      
+
       User.where(id: Connection.where(card_id: -1, contact_id: user.id).pluck(:user_id))
     end
 
@@ -40,9 +40,9 @@ module Types
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
-        raise GraphQL::ExecutionError, e.message        
-      end    
-    end    
+        raise GraphQL::ExecutionError, e.message
+      end
+    end
 
     field :share_card_by_email, String, null: true do
       argument :token, ID, required: true
@@ -57,13 +57,13 @@ module Types
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
-        raise GraphQL::ExecutionError, e.message        
+        raise GraphQL::ExecutionError, e.message
       end
-      
+
       card = Card.find_by(user_id: user.id, id: id)
       card_token = AuthenticateCard.call(user.id, card.id).result
       UserNotifierMailer.send_card_email(user, card, card_token, email).deliver
-    end 
+    end
 
     field :authored_cards, [Types::CardType], null: true do
       argument :token, ID, required: true
@@ -76,11 +76,11 @@ module Types
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
-        raise GraphQL::ExecutionError, e.message        
+        raise GraphQL::ExecutionError, e.message
       end
-      
+
       Card.where(author_id: user.id, user_id: nil)
-    end     
+    end
 
     field :owned_cards, [Types::CardType], null: true do
       argument :token, ID, required: true
@@ -93,9 +93,9 @@ module Types
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
-        raise GraphQL::ExecutionError, e.message        
+        raise GraphQL::ExecutionError, e.message
       end
-      
+
       Card.where(user_id: user.id)
     end
 
@@ -111,9 +111,9 @@ module Types
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
-        raise GraphQL::ExecutionError, e.message        
+        raise GraphQL::ExecutionError, e.message
       end
-      
+
       if search
         Card.where(id: Connection.where(user_id: user.id).pluck(:card_id)).where.not(id: -1).order(:name).search(search)
       else
@@ -132,9 +132,9 @@ module Types
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
-        raise GraphQL::ExecutionError, e.message        
+        raise GraphQL::ExecutionError, e.message
       end
-      
+
       Card.where(id: Connection.where(user: user.id, favorite:true).pluck(:card_id)).where.not(id: -1).order(:name)
     end
 
@@ -151,9 +151,9 @@ module Types
       rescue ExceptionHandler::ExpiredSignature => e
         raise GraphQL::ExecutionError, e.message
       rescue ExceptionHandler::DecodeError => e
-        raise GraphQL::ExecutionError, e.message        
+        raise GraphQL::ExecutionError, e.message
       end
-      
+
       Connection.where(contact_id: user.id).where.not(card_id: -1).left_outer_joins(:user).order('"users"."name"')
     end
 
@@ -165,7 +165,7 @@ module Types
     # def logs(card_id:, token:)
     #   user = AuthorizeUserRequest.call(token).result
     #   Log.where(card_id: card_id, user_id: user.id)
-    # end    
+    # end
 
   end
 end

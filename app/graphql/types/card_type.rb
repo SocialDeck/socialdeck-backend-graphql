@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 module Types
   class CardType < Types::BaseObject
     field :id, ID, null: false
     field :card_token, ID, null: false do
       argument :token, ID, required: true
-    end    
+    end
     field :user, Types::UserType, null: true
     field :author, Types::UserType, null: false
     field :card_name, String, null: false
@@ -22,10 +24,10 @@ module Types
     field :verified, Boolean, null: false
     field :favorite, Boolean, null: false do
       argument :token, ID, required: false
-    end    
+    end
     field :mutual, Boolean, null: false do
       argument :token, ID, required: false
-    end    
+    end
 
     def verified
       !!object.user_id
@@ -34,27 +36,27 @@ module Types
     def card_token(token:)
       user = AuthorizeUserRequest.call(token).result
       AuthenticateCard.call(user.id, object.id).result
-    end    
+    end
 
-    def favorite(token:nil)
+    def favorite(token: nil)
       return false unless token
-      
+
       user = AuthorizeUserRequest.call(token).result
-      connection = Connection.find_by(user_id:user.id, card_id:object.id)
+      connection = Connection.find_by(user_id: user.id, card_id: object.id)
       return false unless connection
 
       connection.favorite || false
-    end  
+    end
 
-    def mutual(token:nil)
+    def mutual(token: nil)
       return true if object.user.blank?
       return true if token.blank?
-      
+
       user = AuthorizeUserRequest.call(token).result
-      connection = Connection.find_by(contact_id:user.id, user_id:object.user.id)
+      connection = Connection.find_by(contact_id: user.id, user_id: object.user.id)
 
       !!connection
-    end  
+    end
 
     def mobile
       TelephoneNumber.parse(object.number, :us).valid_types.include?(:mobile)
